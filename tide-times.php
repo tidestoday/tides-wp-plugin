@@ -4,10 +4,10 @@ defined('ABSPATH') or die('You shall not pass!');
 use \TidesToday\TideTimes\Plugin;
 
 /*
-Plugin Name: Tides Today UK and Ireland Tide Times
-Plugin URI:  https://tides.today/three-day-forecast-plugin
-Description: The Tides Today UK and Ireland Tide Times plugin provides 3 day tide forecasts for over 700 UK and Ireland locations.
-Version:     1.3.3
+Plugin Name: Tides Today Tide Times and Weather
+Plugin URI:  https://tides.today/en/wordpress-plugin
+Description: The Tides Today plugin provides 7 day tide forecasts for over 8,000 locations worldwide.
+Version:     1.0.0
 Author:      Stephen Wright
 Author URI:  https://www.stewright.me/
 License:     GPL2

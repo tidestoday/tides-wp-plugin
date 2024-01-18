@@ -26,6 +26,7 @@ class Plugin
         $this
             ->registerPolyfills()
             ->setPluginBase($pluginBase)
+            ->registerEditor()
             ->registerShortcode();
 
         add_action('widgets_init', [$this, 'registerWidget']);
@@ -59,6 +60,17 @@ class Plugin
     private function registerShortcode()
     {
         new Shortcode();
+        return $this;
+    }
+
+    /**
+     * Registers the editor.
+     *
+     * @return $this
+     */
+    private function registerEditor()
+    {
+        new Editor();
         return $this;
     }
 

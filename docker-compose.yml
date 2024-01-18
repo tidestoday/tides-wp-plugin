@@ -20,7 +20,7 @@ services:
             - db
         image: wordpress:latest
         volumes:
-            - .:/var/www/html/wp-content/plugins/tides-today-uk-ireland-tide-times
+            - .:/var/www/html/wp-content/plugins/tides-today-tide-times
         ports:
             - "8000:80"
         restart: always
@@ -31,6 +31,15 @@ services:
             WORDPRESS_DB_NAME: wordpress
         networks:
             - wppluginnet
+    
+    node:
+        build:
+            context: .
+            dockerfile: ./docker/nodejs/Dockerfile
+        command: npm run dev
+        volumes:
+        - .:/usr/src/app
+        - /usr/src/app/node_modules
 networks:
    wppluginnet:
 volumes:

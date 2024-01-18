@@ -1,8 +1,8 @@
-=== Tides Today UK and Ireland tide times ===
+=== Tides Today Tide Times and Weather ===
 Contributors: sjwright1986
-Tags: sea, tide, tide tables, tide times, UK, Ireland
+Tags: sea, tide, tide tables, tide times, weather
 Requires at least: 4.3
-Tested up to: 5.6
+Tested up to: 6.3
 Stable tag: trunk
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
