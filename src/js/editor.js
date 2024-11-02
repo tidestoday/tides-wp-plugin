@@ -146,31 +146,6 @@ registerBlockType('tides-today/editor-block', {
             </div>
         );
     },
-    save: ({ attributes }) => {
-        return <div>WORK WORK WORK</div>;
-        // const { includeWeather, includeMap, includeBaseStyles, includeTitle, location, daysToShow, weatherUnit } = attributes;
-    
-        // // Check if location is set, if not, don't render anything
-        // if (!location) {
-        //     return null;
-        // }
-    
-        // // Unique identifier for the div
-        // const uniqueId = `tidewidget__${Math.random().toString(36).substr(2, 9)}`;
-    
-        // // Construct the script URL with query parameters
-        // const scriptSrc = `https://tides.today/en/🌍/england/london/chelsea-bridge/widget.js`;
-    
-        // // Render the script and the div
-        // return (
-        //     <div>
-        //         <script 
-        //             type="text/javascript" 
-        //             src={scriptSrc} 
-        //             onLoad={`createTideInstance('${uniqueId}', { includeMap: ${includeMap}, includeWeather: ${includeWeather}, includeTitle: ${includeTitle}, includeStyles: ${includeBaseStyles}, numberDays: ${daysToShow}, weatherUnit: "${weatherUnit}" })`} 
-        //             async>
-        //         </script>
-        //         <div id={uniqueId}></div>
-        //     </div>
-        // );
+    save: () => {
+        return null;
     },});

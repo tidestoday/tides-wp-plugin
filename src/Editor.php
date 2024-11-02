@@ -16,6 +16,7 @@ class Editor
     public function __construct()
     {
         add_action( 'enqueue_block_editor_assets', [$this, 'enqueue'] );
+        add_action( 'init', [$this, 'registerBlock'] );
     }
 
     /**
@@ -40,4 +41,27 @@ class Editor
             '1.0.0'
         );
     }
+
+    function registerBlock() {
+        register_block_type( 'tides-today/editor-block', array(
+            'render_callback' => [$this, 'renderCallback'],
+        ));
+    }
+
+    public function renderCallback( $attributes, $content ) {        
+        $uniqueId = 'tidewidget__52';
+        $scriptSrc = esc_url( 'https://tides.today/en/%F0%9F%8C%8D/england/london/chelsea-bridge/widget.js' );
+        var_dump( $attributes );
+        $includeMap = $attributes["includeMap"] ? "true" : "false";
+        $includeWeather = $attributes["includeWeather"] ? "true" : "false";
+        $includeTitle = $attributes["includeTitle"] ? "true" : "false";
+        $includeStyles = $attributes["includeStyles"] ? "true" : "false";
+        
+        return "<script
+            type=\"text/javascript\"
+            onload=\"createTideInstance('$uniqueId', { includeMap: $includeMap, includeWeather: $includeWeather, includeTitle: $includeTitle, includeStyles: $includeStyles, numberDays: $attributes[daysToShow], weatherUnit: '$attributes[weatherUnit]' })\" 
+            src=\"$scriptSrc\" async></script>
+            <div id=\"$uniqueId\"></div>";
+    }
+
 }
