@@ -1,0 +1,131 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Tides Today UK and Ireland Tide Times\n"
+"POT-Creation-Date: 2017-03-06 21:25+0000\n"
+"PO-Revision-Date: 2017-03-06 21:25+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: cy\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.12\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-WPHeader: tides-today.php\n"
+"Plural-Forms: nplurals=4; plural=(n==1) ? 0 : (n==2) ? 1 : (n != 8 && n != "
+"11) ? 2 : 3;\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;"
+"_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+
+#: src/Shortcode.php:31
+msgid "Tide times"
+msgstr "Amserau llanw"
+
+#: src/TideTimes.php:104
+#, php-format
+msgid "Location '%s' was not found"
+msgstr "Lleoliad '%s' heb ei darganfod"
+
+#: src/Widget.php:28 src/Widget.php:43 src/Widget.php:101
+msgid "Tide Times"
+msgstr "Amserau llanw"
+
+#: src/Widget.php:30
+msgid "Display tide times for over 700 UK and Ireland locations."
+msgstr ""
+"Amseroedd y llanw arddangos ar gyfer dros 700 o leoliadau yn y DU ac "
+"Iwerddon."
+
+#: src/Widget.php:112
+msgid "Title"
+msgstr "Teitl"
+
+#: src/Widget.php:113
+msgid "Enter a title to display"
+msgstr "Rhowch deitl i arddangos"
+
+#: src/Widget.php:114
+msgid "Tide times for..."
+msgstr "Amserau llanw ar gyfer..."
+
+#: src/Widget.php:120
+msgid "Description"
+msgstr "Disgrifiad"
+
+#: src/Widget.php:121
+msgid "Enter a description to display"
+msgstr "Rhowch ddisgrifiad i arddangos"
+
+#: src/Widget.php:127
+msgid "Days to show"
+msgstr "Diwrnod i ddangos"
+
+#: src/Widget.php:128
+msgid "Choose how many days to show"
+msgstr "Dewiswch sawl diwrnod i ddangos"
+
+#: src/Widget.php:130
+msgid "1 day"
+msgstr "1 diwrnod"
+
+#: src/Widget.php:131
+msgid "2 days"
+msgstr "2 ddiwrnod"
+
+#: src/Widget.php:132
+msgid "3 days"
+msgstr "3 diwrnod"
+
+#: src/Widget.php:139
+msgid "Display location map?"
+msgstr "Dangos map lleoliad?"
+
+#: src/Widget.php:140
+msgid "Choose to show a map or not"
+msgstr "Dewis i ddangos map neu beidio"
+
+#: src/Widget.php:142
+msgid "Yes"
+msgstr "Iawn"
+
+#: src/Widget.php:143
+msgid "No"
+msgstr "Na"
+
+#: src/Widget.php:150
+msgid "Locations"
+msgstr "Lleoliadau"
+
+#: src/Widget.php:151
+msgid "Choose which location to show tides for"
+msgstr "Dewis pa leoliad i ddangos llanw ar gyfer"
+
+#. Plugin Name of the plugin/theme
+msgid "Tides Today UK and Ireland Tide Times"
+msgstr ""
+"Mae'r ategyn llanw heddiw DU ac Iwerddon gynorthwyo gwaith yn rhoi'r "
+"rhagolygon llanw 3 diwrnod ar gyfer dros 700 o leoliadau y DU ac Iwerddon."
+
+#. Plugin URI of the plugin/theme
+msgid "https://tides.today/three-day-forecast-plugin"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid ""
+"The Tides Today UK and Ireland Tide Times plugin provides 3 day tide "
+"forecasts for over 700 UK and Ireland locations."
+msgstr ""
+"Mae'r ategyn llanw heddiw DU ac Iwerddon gynorthwyo gwaith yn rhoi'r "
+"rhagolygon llanw 3 diwrnod ar gyfer dros 700 o leoliadau y DU ac Iwerddon."
+
+#. Author of the plugin/theme
+msgid "Stephen Wright"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://www.stewright.me/"
+msgstr ""

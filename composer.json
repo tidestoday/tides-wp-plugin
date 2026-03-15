@@ -1,0 +1,17 @@
+{
+	"name": "sjwright/tides-today-tides-weather",
+	"type": "wordpress-plugin",
+	"description": "Tides Today Tides and Weather WordPress plugin",
+	"license": "GPL-2.0-or-later",
+	"authors": [
+		{
+			"name": "Stephen Wright",
+			"email": "ste.wright@me.com"
+		}
+	],
+	"config": {
+		"platform": {
+			"php": "5.5.0"
+		}
+	}
+}
