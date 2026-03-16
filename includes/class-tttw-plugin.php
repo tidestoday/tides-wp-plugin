@@ -9,6 +9,7 @@ class TTTW_Plugin {
 	const CACHE_GROUP    = 'tttw';
 	const CACHE_PREFIX   = 'tttw_cache_';
 	const ADMIN_SLUG     = 'tttw-builder';
+	const ADMIN_ADD_SLUG = 'tttw-add-widget';
 	const REST_NAMESPACE = 'tides-today/v1';
 	const CATALOG_TTL    = 86400;
 	const SCRIPT_TTL     = 300;
@@ -153,7 +154,9 @@ class TTTW_Plugin {
 	}
 
 	public function enqueue_admin_assets($hook_suffix) {
-		if ('toplevel_page_' . self::ADMIN_SLUG !== $hook_suffix) {
+		$page = ! empty($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+
+		if (! in_array($page, array(self::ADMIN_SLUG, self::ADMIN_ADD_SLUG), true)) {
 			return;
 		}
 
@@ -211,6 +214,7 @@ class TTTW_Plugin {
 					'widgets' => $this->get_block_widget_data(),
 					'labels'  => array(
 						'title'        => __('Tides Today Tides and Weather', 'tides-today'),
+						'description'  => __('Insert a saved Tides Today tide and weather widget.', 'tides-today'),
 						'selectWidget' => __('Select a saved widget', 'tides-today'),
 						'instructions' => __('Choose which saved widget to embed on the front end.', 'tides-today'),
 						'empty'        => __('Create a saved widget in Tides Today before using this block.', 'tides-today'),
@@ -231,6 +235,24 @@ class TTTW_Plugin {
 			array($this, 'render_admin_page'),
 			'dashicons-location-alt',
 			56
+		);
+
+		add_submenu_page(
+			self::ADMIN_SLUG,
+			__('All widgets', 'tides-today'),
+			__('All widgets', 'tides-today'),
+			'manage_options',
+			self::ADMIN_SLUG,
+			array($this, 'render_admin_page')
+		);
+
+		add_submenu_page(
+			self::ADMIN_SLUG,
+			__('Add Widget', 'tides-today'),
+			__('Add Widget', 'tides-today'),
+			'manage_options',
+			self::ADMIN_ADD_SLUG,
+			array($this, 'render_admin_page')
 		);
 	}
 
@@ -258,6 +280,7 @@ class TTTW_Plugin {
 		$editing_widget = $this->get_editing_widget();
 		$widgets        = $this->get_widgets();
 		$settings       = $this->get_widget_settings($editing_widget);
+		$is_builder     = $this->is_builder_view();
 		?>
 		<div class="wrap tttw-admin">
 			<h1><?php esc_html_e('Tides Today Tides and Weather', 'tides-today'); ?></h1>
@@ -265,253 +288,289 @@ class TTTW_Plugin {
 
 			<?php $this->render_admin_page_notice(); ?>
 
-			<div class="tttw-admin__grid">
-				<div class="tttw-card tttw-card--main">
-					<div class="tttw-card__header">
-						<h2><?php echo $editing_widget ? esc_html__('Edit saved widget', 'tides-today') : esc_html__('Create saved widget', 'tides-today'); ?></h2>
-						<?php if ($editing_widget) : ?>
-							<a class="button button-secondary" href="<?php echo esc_url(admin_url('admin.php?page=' . self::ADMIN_SLUG)); ?>">
-								<?php esc_html_e('Create new widget', 'tides-today'); ?>
-							</a>
-						<?php endif; ?>
-					</div>
-
-					<p id="tttw-api-status" class="tttw-api-status" aria-live="polite"></p>
-
-					<div class="tttw-builder-layout">
-						<div class="tttw-builder-layout__form">
-							<form id="tttw-builder-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-								<input type="hidden" name="action" value="tttw_save_widget" />
-								<input type="hidden" name="widget_id" value="<?php echo $editing_widget ? esc_attr($editing_widget['id']) : ''; ?>" />
-								<?php wp_nonce_field('tttw_save_widget', 'tttw_nonce'); ?>
-
-								<table class="form-table" role="presentation">
-									<tbody>
-										<tr>
-											<th scope="row">
-												<label for="tttw-widget-name"><?php esc_html_e('Unique name', 'tides-today'); ?></label>
-											</th>
-											<td>
-												<input
-													type="text"
-													class="regular-text"
-													id="tttw-widget-name"
-													name="widget_name"
-													required="required"
-													value="<?php echo $editing_widget ? esc_attr($editing_widget['name']) : ''; ?>"
-												/>
-												<p class="description"><?php esc_html_e('This name is used in shortcode, block, and widget pickers.', 'tides-today'); ?></p>
-											</td>
-										</tr>
-										<tr>
-											<th scope="row">
-												<label for="tttw-language"><?php esc_html_e('Language', 'tides-today'); ?></label>
-											</th>
-											<td>
-												<select id="tttw-language" name="language">
-													<option value="en" <?php selected(isset($editing_widget['language']) ? $editing_widget['language'] : 'en', 'en'); ?>>
-														<?php esc_html_e('English', 'tides-today'); ?>
-													</option>
-													<option value="fr" <?php selected(isset($editing_widget['language']) ? $editing_widget['language'] : '', 'fr'); ?>>
-														<?php esc_html_e('French', 'tides-today'); ?>
-													</option>
-												</select>
-											</td>
-										</tr>
-										<tr>
-											<th scope="row">
-												<label for="tttw-country"><?php esc_html_e('Country', 'tides-today'); ?></label>
-											</th>
-											<td>
-												<select id="tttw-country" name="country_id" disabled="disabled">
-													<option value=""><?php esc_html_e('Select a country', 'tides-today'); ?></option>
-												</select>
-											</td>
-										</tr>
-										<tr>
-											<th scope="row">
-												<label for="tttw-region"><?php esc_html_e('Region', 'tides-today'); ?></label>
-											</th>
-											<td>
-												<select id="tttw-region" name="region_id" disabled="disabled">
-													<option value=""><?php esc_html_e('Select a region', 'tides-today'); ?></option>
-												</select>
-											</td>
-										</tr>
-										<tr>
-											<th scope="row">
-												<label for="tttw-location"><?php esc_html_e('Location', 'tides-today'); ?></label>
-											</th>
-											<td>
-												<select id="tttw-location" name="location_id" disabled="disabled">
-													<option value=""><?php esc_html_e('Select a location', 'tides-today'); ?></option>
-												</select>
-											</td>
-										</tr>
-										<tr>
-											<th scope="row">
-												<label for="tttw-number-days"><?php esc_html_e('Days to show', 'tides-today'); ?></label>
-											</th>
-											<td>
-												<select id="tttw-number-days" name="number_days">
-													<?php for ($day = 1; $day <= 5; $day++) : ?>
-														<option value="<?php echo esc_attr($day); ?>" <?php selected($settings['number_days'], $day); ?>>
-															<?php echo esc_html($day); ?>
-														</option>
-													<?php endfor; ?>
-												</select>
-											</td>
-										</tr>
-										<tr>
-											<th scope="row"><?php esc_html_e('Display options', 'tides-today'); ?></th>
-											<td>
-												<fieldset>
-													<label for="tttw-include-title">
-														<input type="checkbox" id="tttw-include-title" name="include_title" value="1" <?php checked($settings['include_title']); ?> />
-														<?php esc_html_e('Include title', 'tides-today'); ?>
-													</label>
-													<br />
-													<label for="tttw-include-map">
-														<input type="checkbox" id="tttw-include-map" name="include_map" value="1" <?php checked($settings['include_map']); ?> />
-														<?php esc_html_e('Include map', 'tides-today'); ?>
-													</label>
-													<br />
-													<label for="tttw-include-weather">
-														<input type="checkbox" id="tttw-include-weather" name="include_weather" value="1" <?php checked($settings['include_weather']); ?> />
-														<?php esc_html_e('Include weather', 'tides-today'); ?>
-													</label>
-													<br />
-													<label for="tttw-include-styles">
-														<input type="checkbox" id="tttw-include-styles" name="include_styles" value="1" <?php checked($settings['include_styles']); ?> />
-														<?php esc_html_e('Include base styles', 'tides-today'); ?>
-													</label>
-												</fieldset>
-											</td>
-										</tr>
-										<tr>
-											<th scope="row">
-												<label for="tttw-custom-css"><?php esc_html_e('Custom CSS', 'tides-today'); ?></label>
-											</th>
-											<td>
-												<textarea
-													id="tttw-custom-css"
-													name="custom_css"
-													rows="8"
-													class="large-text code"
-													placeholder=".tides-widget__container { border-radius: 12px; }"
-												><?php echo esc_textarea($settings['custom_css']); ?></textarea>
-												<p class="description"><?php esc_html_e('If filled, this CSS is printed inline with the widget on the front end.', 'tides-today'); ?></p>
-											</td>
-										</tr>
-										<tr>
-											<th scope="row">
-												<label for="tttw-weather-unit"><?php esc_html_e('Weather unit', 'tides-today'); ?></label>
-											</th>
-											<td>
-												<select id="tttw-weather-unit" name="weather_unit">
-													<option value="c" <?php selected($settings['weather_unit'], 'c'); ?>><?php esc_html_e('Celsius', 'tides-today'); ?></option>
-													<option value="f" <?php selected($settings['weather_unit'], 'f'); ?>><?php esc_html_e('Fahrenheit', 'tides-today'); ?></option>
-												</select>
-											</td>
-										</tr>
-										<tr>
-											<th scope="row">
-												<label for="tttw-height-unit"><?php esc_html_e('Height unit', 'tides-today'); ?></label>
-											</th>
-											<td>
-												<select id="tttw-height-unit" name="height_unit">
-													<option value="m" <?php selected($settings['height_unit'], 'm'); ?>><?php esc_html_e('Meters', 'tides-today'); ?></option>
-													<option value="ft" <?php selected($settings['height_unit'], 'ft'); ?>><?php esc_html_e('Feet', 'tides-today'); ?></option>
-												</select>
-											</td>
-										</tr>
-									</tbody>
-								</table>
-
-								<?php
-								submit_button(
-									$editing_widget ? __('Update widget', 'tides-today') : __('Save widget', 'tides-today'),
-									'primary',
-									'submit',
-									false
-								);
-								?>
-							</form>
-						</div>
-
-						<div class="tttw-builder-layout__preview">
-							<div class="tttw-preview">
-								<div class="tttw-preview__header">
-									<h3><?php esc_html_e('Live preview', 'tides-today'); ?></h3>
-									<p><?php esc_html_e('The preview updates after you choose a location and whenever you change the widget options.', 'tides-today'); ?></p>
+			<div class="tttw-admin__stack">
+				<?php if (! $is_builder) : ?>
+					<div class="tttw-card">
+						<div class="tttw-overview">
+							<div class="tttw-overview__intro">
+								<img
+									class="tttw-overview__logo"
+									src="<?php echo esc_url('https://tides-assets.lon1.cdn.digitaloceanspaces.com/prod/media/Halo_750x750_min_d0b74a0f1e.png'); ?>"
+									alt="<?php esc_attr_e('Tides Today logo', 'tides-today'); ?>"
+								/>
+								<div>
+									<h2><?php esc_html_e('Tides Today Tides and Weather', 'tides-today'); ?></h2>
+									<p><?php esc_html_e('The Tides Today Tides and Weather Plugin allows you to add tide times and weather, for over 8,000 locations world-wide.', 'tides-today'); ?></p>
 								</div>
-								<div id="tttw-preview-placeholder" class="tttw-preview__placeholder">
-									<?php esc_html_e('Choose a location to preview the widget.', 'tides-today'); ?>
-								</div>
-								<iframe
-									id="tttw-preview-frame"
-									class="tttw-preview__frame"
-									title="<?php esc_attr_e('Tides Today widget preview', 'tides-today'); ?>"
-									scrolling="no"
-								></iframe>
+							</div>
+
+							<div class="tttw-overview__links">
+								<ul>
+									<?php foreach ($this->get_overview_links() as $link) : ?>
+										<li>
+											<a href="<?php echo esc_url($link['url']); ?>" target="_blank" rel="noopener noreferrer">
+												<span class="tttw-overview__icon" aria-hidden="true"><?php echo $this->get_overview_icon_markup($link['icon']); ?></span>
+												<span><?php echo esc_html($link['label']); ?></span>
+											</a>
+										</li>
+									<?php endforeach; ?>
+								</ul>
 							</div>
 						</div>
 					</div>
-				</div>
-			</div>
 
-			<div class="tttw-card">
-				<h2><?php esc_html_e('Saved widgets', 'tides-today'); ?></h2>
-				<?php if (empty($widgets)) : ?>
-					<p><?php esc_html_e('No saved widgets yet.', 'tides-today'); ?></p>
+					<div class="tttw-card">
+						<?php if (empty($widgets)) : ?>
+							<h2><?php esc_html_e('Saved widgets', 'tides-today'); ?></h2>
+							<p><?php esc_html_e('There are no Tides Today widgets yet. Create one to get started', 'tides-today'); ?></p>
+							<p>
+								<a class="button button-primary" href="<?php echo esc_url($this->get_admin_builder_url()); ?>">
+									<?php esc_html_e('Create a widget', 'tides-today'); ?>
+								</a>
+							</p>
+						<?php else : ?>
+							<div class="tttw-card__toolbar">
+								<h2><?php esc_html_e('Saved widgets', 'tides-today'); ?></h2>
+								<a class="button button-primary" href="<?php echo esc_url($this->get_admin_builder_url()); ?>">
+									<?php esc_html_e('Create widget', 'tides-today'); ?>
+								</a>
+							</div>
+
+							<table class="widefat striped tttw-saved-widgets">
+								<thead>
+									<tr>
+										<th scope="col"><?php esc_html_e('Name', 'tides-today'); ?></th>
+										<th scope="col"><?php esc_html_e('Language', 'tides-today'); ?></th>
+										<th scope="col"><?php esc_html_e('Location', 'tides-today'); ?></th>
+										<th scope="col"><?php esc_html_e('Shortcode', 'tides-today'); ?></th>
+										<th scope="col"><?php esc_html_e('Actions', 'tides-today'); ?></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ($widgets as $widget) : ?>
+										<tr>
+											<td><?php echo esc_html($widget['name']); ?></td>
+											<td><?php echo esc_html($this->get_language_label($widget['language'])); ?></td>
+											<td><?php echo esc_html($this->get_widget_location_label($widget)); ?></td>
+											<td><code><?php echo esc_html($this->get_shortcode_string($widget)); ?></code></td>
+											<td class="tttw-actions">
+												<a class="button button-secondary" href="<?php echo esc_url($this->get_admin_builder_url($widget['id'])); ?>">
+													<?php esc_html_e('Edit', 'tides-today'); ?>
+												</a>
+												<form class="tttw-inline-form tttw-delete-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+													<input type="hidden" name="action" value="tttw_delete_widget" />
+													<input type="hidden" name="widget_id" value="<?php echo esc_attr($widget['id']); ?>" />
+													<?php wp_nonce_field('tttw_delete_widget_' . $widget['id'], 'tttw_delete_nonce'); ?>
+													<button type="submit" class="button-link-delete"><?php esc_html_e('Delete', 'tides-today'); ?></button>
+												</form>
+											</td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						<?php endif; ?>
+					</div>
 				<?php else : ?>
-					<table class="widefat striped tttw-saved-widgets">
-						<thead>
-							<tr>
-								<th scope="col"><?php esc_html_e('Name', 'tides-today'); ?></th>
-								<th scope="col"><?php esc_html_e('Language', 'tides-today'); ?></th>
-								<th scope="col"><?php esc_html_e('Location', 'tides-today'); ?></th>
-								<th scope="col"><?php esc_html_e('Shortcode', 'tides-today'); ?></th>
-								<th scope="col"><?php esc_html_e('Actions', 'tides-today'); ?></th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php foreach ($widgets as $widget) : ?>
-								<tr>
-									<td><?php echo esc_html($widget['name']); ?></td>
-									<td><?php echo esc_html($this->get_language_label($widget['language'])); ?></td>
-									<td><?php echo esc_html($this->get_widget_location_label($widget)); ?></td>
-									<td><code><?php echo esc_html($this->get_shortcode_string($widget)); ?></code></td>
-									<td class="tttw-actions">
-										<a class="button button-secondary" href="<?php echo esc_url(admin_url('admin.php?page=' . self::ADMIN_SLUG . '&edit=' . rawurlencode($widget['id']))); ?>">
-											<?php esc_html_e('Edit', 'tides-today'); ?>
-										</a>
-										<form class="tttw-inline-form tttw-delete-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-											<input type="hidden" name="action" value="tttw_delete_widget" />
-											<input type="hidden" name="widget_id" value="<?php echo esc_attr($widget['id']); ?>" />
-											<?php wp_nonce_field('tttw_delete_widget_' . $widget['id'], 'tttw_delete_nonce'); ?>
-											<button type="submit" class="button-link-delete"><?php esc_html_e('Delete', 'tides-today'); ?></button>
-										</form>
-									</td>
-								</tr>
-							<?php endforeach; ?>
-						</tbody>
-					</table>
-				<?php endif; ?>
-			</div>
+					<div class="tttw-card tttw-card--main">
+						<div class="tttw-card__header">
+							<h2><?php echo $editing_widget ? esc_html__('Edit widget', 'tides-today') : esc_html__('Create widget', 'tides-today'); ?></h2>
+							<a class="button button-secondary" href="<?php echo esc_url($this->get_admin_overview_url()); ?>">
+								<?php esc_html_e('Back to widgets', 'tides-today'); ?>
+							</a>
+						</div>
 
-			<div class="tttw-card">
-				<h2><?php esc_html_e('Usage', 'tides-today'); ?></h2>
-				<?php if ($editing_widget) : ?>
-					<p><?php esc_html_e('Use this shortcode anywhere shortcodes are supported:', 'tides-today'); ?></p>
-					<code class="tttw-shortcode"><?php echo esc_html($this->get_shortcode_string($editing_widget)); ?></code>
-					<p><?php esc_html_e('The same saved widget will also appear in the classic Widgets screen and in the Gutenberg block dropdown.', 'tides-today'); ?></p>
-				<?php else : ?>
-					<p><?php esc_html_e('Save a widget to generate its shortcode and make it available in the sidebar widget picker and the Gutenberg block.', 'tides-today'); ?></p>
-				<?php endif; ?>
+						<p id="tttw-api-status" class="tttw-api-status" aria-live="polite"></p>
 
-				<h3><?php esc_html_e('Caching', 'tides-today'); ?></h3>
-				<p><?php esc_html_e('Countries, regions, locations, and proxied widget scripts are cached with WordPress cache APIs to reduce repeated calls to Tides Today.', 'tides-today'); ?></p>
+						<div class="tttw-builder-layout">
+							<div class="tttw-builder-layout__form">
+								<form id="tttw-builder-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+									<input type="hidden" name="action" value="tttw_save_widget" />
+									<input type="hidden" name="widget_id" value="<?php echo $editing_widget ? esc_attr($editing_widget['id']) : ''; ?>" />
+									<?php wp_nonce_field('tttw_save_widget', 'tttw_nonce'); ?>
+
+									<table class="form-table" role="presentation">
+										<tbody>
+											<tr>
+												<th scope="row">
+													<label for="tttw-widget-name"><?php esc_html_e('Unique name', 'tides-today'); ?></label>
+												</th>
+												<td>
+													<input
+														type="text"
+														class="regular-text"
+														id="tttw-widget-name"
+														name="widget_name"
+														required="required"
+														value="<?php echo $editing_widget ? esc_attr($editing_widget['name']) : ''; ?>"
+													/>
+													<p class="description"><?php esc_html_e('This name is used in shortcode, block, and widget pickers.', 'tides-today'); ?></p>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row">
+													<label for="tttw-language"><?php esc_html_e('Language', 'tides-today'); ?></label>
+												</th>
+												<td>
+													<select id="tttw-language" name="language">
+														<option value="en" <?php selected(isset($editing_widget['language']) ? $editing_widget['language'] : 'en', 'en'); ?>>
+															<?php esc_html_e('English', 'tides-today'); ?>
+														</option>
+														<option value="fr" <?php selected(isset($editing_widget['language']) ? $editing_widget['language'] : '', 'fr'); ?>>
+															<?php esc_html_e('French', 'tides-today'); ?>
+														</option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row">
+													<label for="tttw-country"><?php esc_html_e('Country', 'tides-today'); ?></label>
+												</th>
+												<td>
+													<select id="tttw-country" name="country_id" disabled="disabled">
+														<option value=""><?php esc_html_e('Select a country', 'tides-today'); ?></option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row">
+													<label for="tttw-region"><?php esc_html_e('Region', 'tides-today'); ?></label>
+												</th>
+												<td>
+													<select id="tttw-region" name="region_id" disabled="disabled">
+														<option value=""><?php esc_html_e('Select a region', 'tides-today'); ?></option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row">
+													<label for="tttw-location"><?php esc_html_e('Location', 'tides-today'); ?></label>
+												</th>
+												<td>
+													<select id="tttw-location" name="location_id" disabled="disabled">
+														<option value=""><?php esc_html_e('Select a location', 'tides-today'); ?></option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row">
+													<label for="tttw-number-days"><?php esc_html_e('Days to show', 'tides-today'); ?></label>
+												</th>
+												<td>
+													<select id="tttw-number-days" name="number_days">
+														<?php for ($day = 1; $day <= 5; $day++) : ?>
+															<option value="<?php echo esc_attr($day); ?>" <?php selected($settings['number_days'], $day); ?>>
+																<?php echo esc_html($day); ?>
+															</option>
+														<?php endfor; ?>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row"><?php esc_html_e('Display options', 'tides-today'); ?></th>
+												<td>
+													<fieldset>
+														<label for="tttw-include-title">
+															<input type="checkbox" id="tttw-include-title" name="include_title" value="1" <?php checked($settings['include_title']); ?> />
+															<?php esc_html_e('Include title', 'tides-today'); ?>
+														</label>
+														<br />
+														<label for="tttw-include-map">
+															<input type="checkbox" id="tttw-include-map" name="include_map" value="1" <?php checked($settings['include_map']); ?> />
+															<?php esc_html_e('Include map', 'tides-today'); ?>
+														</label>
+														<br />
+														<label for="tttw-include-weather">
+															<input type="checkbox" id="tttw-include-weather" name="include_weather" value="1" <?php checked($settings['include_weather']); ?> />
+															<?php esc_html_e('Include weather', 'tides-today'); ?>
+														</label>
+														<br />
+														<label for="tttw-include-styles">
+															<input type="checkbox" id="tttw-include-styles" name="include_styles" value="1" <?php checked($settings['include_styles']); ?> />
+															<?php esc_html_e('Include base styles', 'tides-today'); ?>
+														</label>
+													</fieldset>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row">
+													<label for="tttw-custom-css"><?php esc_html_e('Custom CSS', 'tides-today'); ?></label>
+												</th>
+												<td>
+													<textarea
+														id="tttw-custom-css"
+														name="custom_css"
+														rows="8"
+														class="large-text code"
+														placeholder=".tides-widget__container { border-radius: 12px; }"
+													><?php echo esc_textarea($settings['custom_css']); ?></textarea>
+													<p class="description"><?php esc_html_e('If filled, this CSS is printed inline with the widget on the front end.', 'tides-today'); ?></p>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row">
+													<label for="tttw-weather-unit"><?php esc_html_e('Weather unit', 'tides-today'); ?></label>
+												</th>
+												<td>
+													<select id="tttw-weather-unit" name="weather_unit">
+														<option value="c" <?php selected($settings['weather_unit'], 'c'); ?>><?php esc_html_e('Celsius', 'tides-today'); ?></option>
+														<option value="f" <?php selected($settings['weather_unit'], 'f'); ?>><?php esc_html_e('Fahrenheit', 'tides-today'); ?></option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row">
+													<label for="tttw-height-unit"><?php esc_html_e('Height unit', 'tides-today'); ?></label>
+												</th>
+												<td>
+													<select id="tttw-height-unit" name="height_unit">
+														<option value="m" <?php selected($settings['height_unit'], 'm'); ?>><?php esc_html_e('Meters', 'tides-today'); ?></option>
+														<option value="ft" <?php selected($settings['height_unit'], 'ft'); ?>><?php esc_html_e('Feet', 'tides-today'); ?></option>
+													</select>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+
+									<?php
+									submit_button(
+										$editing_widget ? __('Update widget', 'tides-today') : __('Save widget', 'tides-today'),
+										'primary',
+										'submit',
+										false
+									);
+									?>
+								</form>
+							</div>
+
+							<div class="tttw-builder-layout__preview">
+								<div class="tttw-preview">
+									<div class="tttw-preview__header">
+										<h3><?php esc_html_e('Live preview', 'tides-today'); ?></h3>
+										<p><?php esc_html_e('The preview updates after you choose a location and whenever you change the widget options.', 'tides-today'); ?></p>
+									</div>
+									<div id="tttw-preview-placeholder" class="tttw-preview__placeholder">
+										<?php esc_html_e('Choose a location to preview the widget.', 'tides-today'); ?>
+									</div>
+									<iframe
+										id="tttw-preview-frame"
+										class="tttw-preview__frame"
+										title="<?php esc_attr_e('Tides Today widget preview', 'tides-today'); ?>"
+										scrolling="no"
+									></iframe>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<?php if ($editing_widget) : ?>
+						<div class="tttw-card">
+							<h2><?php esc_html_e('Usage', 'tides-today'); ?></h2>
+							<p><?php esc_html_e('Use this shortcode anywhere shortcodes are supported:', 'tides-today'); ?></p>
+							<code class="tttw-shortcode"><?php echo esc_html($this->get_shortcode_string($editing_widget)); ?></code>
+							<p><?php esc_html_e('The same saved widget will also appear in the classic Widgets screen and in the Gutenberg block dropdown.', 'tides-today'); ?></p>
+						</div>
+					<?php endif; ?>
+				<?php endif; ?>
 			</div>
 		</div>
 		<?php
@@ -1010,6 +1069,27 @@ class TTTW_Plugin {
 		return $this->get_widget(wp_unslash($_GET['edit']));
 	}
 
+	private function is_builder_view() {
+		$page = ! empty($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+		$view = ! empty($_GET['view']) ? sanitize_key(wp_unslash($_GET['view'])) : '';
+
+		return self::ADMIN_ADD_SLUG === $page || ! empty($_GET['edit']) || 'builder' === $view;
+	}
+
+	private function get_admin_overview_url() {
+		return admin_url('admin.php?page=' . self::ADMIN_SLUG);
+	}
+
+	private function get_admin_builder_url($widget_id = '') {
+		$base_url = admin_url('admin.php?page=' . self::ADMIN_ADD_SLUG);
+
+		if (empty($widget_id)) {
+			return $base_url;
+		}
+
+		return add_query_arg(array('edit' => sanitize_key($widget_id)), $base_url);
+	}
+
 	private function get_widget_settings($widget) {
 		$defaults = $this->get_default_widget_settings();
 
@@ -1448,7 +1528,20 @@ class TTTW_Plugin {
 	}
 
 	private function redirect_to_admin($query_args) {
-		$url = add_query_arg($query_args, admin_url('admin.php?page=' . self::ADMIN_SLUG));
+		$base_url = $this->get_admin_overview_url();
+
+		if (isset($query_args['edit']) && empty($query_args['edit'])) {
+			unset($query_args['edit']);
+			$base_url = $this->get_admin_builder_url();
+		} elseif (! empty($query_args['edit'])) {
+			$base_url = $this->get_admin_builder_url(sanitize_key($query_args['edit']));
+			unset($query_args['edit']);
+		} elseif (! empty($query_args['view']) && 'builder' === $query_args['view']) {
+			$base_url = $this->get_admin_builder_url();
+			unset($query_args['view']);
+		}
+
+		$url = add_query_arg($query_args, $base_url);
 
 		wp_safe_redirect($url);
 		exit;
@@ -1483,6 +1576,52 @@ class TTTW_Plugin {
 
 	private function get_language_label($language) {
 		return ('fr' === $language) ? __('French', 'tides-today') : __('English', 'tides-today');
+	}
+
+	private function get_overview_links() {
+		return array(
+			array(
+				'label' => __('Visit Tides Today', 'tides-today'),
+				'url'   => 'https://tides.today',
+				'icon'  => 'site',
+			),
+			array(
+				'label' => __('Find on Facebook', 'tides-today'),
+				'url'   => 'https://www.facebook.com/gettidetimes',
+				'icon'  => 'facebook',
+			),
+			array(
+				'label' => __('Follow on X', 'tides-today'),
+				'url'   => 'https://twitter.com/tidesToday',
+				'icon'  => 'x',
+			),
+			array(
+				'label' => __('Subscribe on Youtube', 'tides-today'),
+				'url'   => 'https://www.youtube.com/@tidestoday',
+				'icon'  => 'youtube',
+			),
+			array(
+				'label' => __('Follow on Instagram', 'tides-today'),
+				'url'   => 'https://instagram.com/tidestoday',
+				'icon'  => 'instagram',
+			),
+		);
+	}
+
+	private function get_overview_icon_markup($icon) {
+		switch ($icon) {
+			case 'facebook':
+				return '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M13.5 22v-8h2.7l.4-3h-3.1V9.1c0-.9.2-1.5 1.5-1.5H16.8V5c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4V11H8v3h2.6v8h2.9z" fill="currentColor"/></svg>';
+			case 'x':
+				return '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M18.9 3H21l-4.6 5.3L21.8 21h-4.7l-3.7-4.9L9.1 21H7l5-5.8L2.9 3h4.8l3.3 4.4L14.9 3h4zm-1.6 16h1.3L6.9 4.9H5.5L17.3 19z" fill="currentColor"/></svg>';
+			case 'youtube':
+				return '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M21.6 7.2c-.2-.9-.9-1.6-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4c-.9.2-1.6.9-1.8 1.8C2 8.8 2 12 2 12s0 3.2.4 4.8c.2.9.9 1.6 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4c.9-.2 1.6-.9 1.8-1.8.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15.1V8.9l5.2 3.1-5.2 3.1z" fill="currentColor"/></svg>';
+			case 'instagram':
+				return '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 7.1A4.9 4.9 0 1 0 16.9 12 4.9 4.9 0 0 0 12 7.1zm0 8.1A3.2 3.2 0 1 1 15.2 12 3.2 3.2 0 0 1 12 15.2z" fill="currentColor"/><path d="M17.3 2.9H6.7A3.8 3.8 0 0 0 2.9 6.7v10.6a3.8 3.8 0 0 0 3.8 3.8h10.6a3.8 3.8 0 0 0 3.8-3.8V6.7a3.8 3.8 0 0 0-3.8-3.8zm2.1 14.4a2.1 2.1 0 0 1-2.1 2.1H6.7a2.1 2.1 0 0 1-2.1-2.1V6.7a2.1 2.1 0 0 1 2.1-2.1h10.6a2.1 2.1 0 0 1 2.1 2.1z" fill="currentColor"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor"/></svg>';
+			case 'site':
+			default:
+				return '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm7.8 9h-3.1a15.4 15.4 0 0 0-1.1-5A8.4 8.4 0 0 1 19.8 11zM12 4.2c.9 1 2.1 3.3 2.7 6.8H9.3C9.9 7.5 11.1 5.2 12 4.2zM8.4 6a15.4 15.4 0 0 0-1.1 5H4.2A8.4 8.4 0 0 1 8.4 6zM4.2 13h3.1a15.4 15.4 0 0 0 1.1 5A8.4 8.4 0 0 1 4.2 13zm7.8 6.8c-.9-1-2.1-3.3-2.7-6.8h5.4c-.6 3.5-1.8 5.8-2.7 6.8zm3.6-1.8a15.4 15.4 0 0 0 1.1-5h3.1a8.4 8.4 0 0 1-4.2 5z" fill="currentColor"/></svg>';
+		}
 	}
 
 	private function sort_widgets_by_name($left, $right) {

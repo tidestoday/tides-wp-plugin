@@ -33,6 +33,11 @@ Features include:
 4. Create and save a widget configuration.
 5. Use the generated shortcode, select the widget in a sidebar, or choose it from the Gutenberg block dropdown.
 
+== Screenshots ==
+
+1. The widget builder in the WordPress admin with live preview and location selection.
+2. A saved Tides Today widget embedded on the front end of a WordPress post.
+
 == Frequently Asked Questions ==
 
 = How do I add a widget to a page? =

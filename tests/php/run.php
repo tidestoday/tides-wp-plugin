@@ -155,6 +155,17 @@ $tests['get_init_query_args_from_settings produces widget query arguments'] = fu
 	);
 };
 
+$tests['French locale packs exist for both France and French Canada'] = function () {
+	$base_dir = dirname(dirname(__DIR__)) . '/languages/';
+
+	tttw_assert_true(file_exists($base_dir . 'tides-today-fr_FR.po'), 'The fr_FR PO file should exist.');
+	tttw_assert_true(file_exists($base_dir . 'tides-today-fr_FR.mo'), 'The fr_FR MO file should exist.');
+	tttw_assert_true(file_exists($base_dir . 'tides-today-fr_CA.po'), 'The fr_CA PO file should exist.');
+	tttw_assert_true(file_exists($base_dir . 'tides-today-fr_CA.mo'), 'The fr_CA MO file should exist.');
+	tttw_assert_true(! file_exists($base_dir . 'tides-today-cy.po'), 'The legacy Welsh PO file should be removed.');
+	tttw_assert_true(! file_exists($base_dir . 'tides-today-cy.mo'), 'The legacy Welsh MO file should be removed.');
+};
+
 $failures = array();
 
 foreach ($tests as $name => $test) {

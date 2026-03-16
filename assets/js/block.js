@@ -25,7 +25,7 @@
 
 	blocks.registerBlockType('tides-today/tides-weather', {
 		title: labels.title || __('Tides Today Tides and Weather', 'tides-today'),
-		description: __('Insert a saved Tides Today tide and weather widget.', 'tides-today'),
+		description: labels.description || __('Insert a saved Tides Today tide and weather widget.', 'tides-today'),
 		icon: 'location-alt',
 		category: 'widgets',
 		attributes: {
@@ -68,7 +68,7 @@
 					{
 						className: 'tttw-block-editor__description'
 					},
-					widgets.length ? (labels.instructions || __('Choose which saved widget to embed on the front end.', 'tides-today')) : (labels.empty || __('Create a saved widget in Tides Today first.', 'tides-today'))
+					widgets.length ? (labels.instructions || __('Choose which saved widget to embed on the front end.', 'tides-today')) : (labels.empty || __('Create a saved widget in Tides Today before using this block.', 'tides-today'))
 				),
 				widgets.length ? el(components.SelectControl, {
 					label: labels.selectWidget || __('Select a saved widget', 'tides-today'),

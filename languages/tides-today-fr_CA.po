@@ -1,0 +1,298 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Tides Today Tides and Weather\n"
+"POT-Creation-Date: 2026-03-15 00:00+0000\n"
+"PO-Revision-Date: 2026-03-15 00:00+0000\n"
+"Last-Translator: Codex\n"
+"Language-Team: French (Canada)\n"
+"Language: fr_CA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Codex\n"
+
+msgid "Tides Today Tides and Weather"
+msgstr "Tides Today Marees et meteo"
+
+msgid "Display a saved Tides Today tide and weather widget."
+msgstr "Affiche un widget Tides Today enregistre avec marees et meteo."
+
+msgid "Saved widget"
+msgstr "Widget enregistre"
+
+msgid "Select a saved widget"
+msgstr "Selectionnez un widget enregistre"
+
+msgid "Create your first saved widget in Tides Today."
+msgstr "Creez votre premier widget enregistre dans Tides Today."
+
+msgid "Loading Tides Today data..."
+msgstr "Chargement des donnees Tides Today..."
+
+msgid "Select a country"
+msgstr "Selectionnez un pays"
+
+msgid "Select a region"
+msgstr "Selectionnez une region"
+
+msgid "Select a location"
+msgstr "Selectionnez un lieu"
+
+msgid "Choose a language first"
+msgstr "Choisissez d'abord une langue"
+
+msgid "Choose a country first"
+msgstr "Choisissez d'abord un pays"
+
+msgid "Choose a region first"
+msgstr "Choisissez d'abord une region"
+
+msgid "We could not load data from Tides Today. Please try again."
+msgstr "Impossible de charger les donnees depuis Tides Today. Veuillez reessayer."
+
+msgid "Delete this saved widget?"
+msgstr "Supprimer ce widget enregistre ?"
+
+msgid "Choose a location to preview the widget."
+msgstr "Choisissez un lieu pour previsualiser le widget."
+
+msgid "Loading live preview..."
+msgstr "Chargement de l'apercu en direct..."
+
+msgid "We could not build the live preview right now."
+msgstr "Impossible de generer l'apercu en direct pour le moment."
+
+msgid "Tides Today widget preview"
+msgstr "Apercu du widget Tides Today"
+
+msgid "Insert a saved Tides Today tide and weather widget."
+msgstr "Inserez un widget Tides Today enregistre avec marees et meteo."
+
+msgid "Choose which saved widget to embed on the front end."
+msgstr "Choisissez le widget enregistre a integrer sur le site."
+
+msgid "Create a saved widget in Tides Today before using this block."
+msgstr "Creez un widget enregistre dans Tides Today avant d'utiliser ce bloc."
+
+msgid "Saved widgets are managed in the Tides Today admin screen."
+msgstr "Les widgets enregistres sont geres dans l'ecran d'administration Tides Today."
+
+msgid "Tides Today"
+msgstr "Tides Today"
+
+msgid "All widgets"
+msgstr "Tous les widgets"
+
+msgid "Add Widget"
+msgstr "Ajouter un widget"
+
+msgid "Tides Today Tides and Weather cannot finish loading:"
+msgstr "Tides Today Marees et meteo ne peut pas terminer son chargement :"
+
+msgid "You do not have permission to manage Tides Today widgets."
+msgstr "Vous n'avez pas l'autorisation de gerer les widgets Tides Today."
+
+msgid "Create reusable tide and weather widgets for shortcodes, sidebars, and the block editor."
+msgstr "Creez des widgets reutilisables de marees et meteo pour les shortcodes, les barres laterales et l'editeur de blocs."
+
+msgid "Tides Today logo"
+msgstr "Logo Tides Today"
+
+msgid "The Tides Today Tides and Weather Plugin allows you to add tide times and weather, for over 8,000 locations world-wide."
+msgstr "L'extension Tides Today Marees et meteo vous permet d'ajouter les horaires de maree et la meteo pour plus de 8 000 lieux dans le monde."
+
+msgid "Saved widgets"
+msgstr "Widgets enregistres"
+
+msgid "There are no Tides Today widgets yet. Create one to get started"
+msgstr "Il n'existe encore aucun widget Tides Today. Creez-en un pour commencer"
+
+msgid "Create a widget"
+msgstr "Creer un widget"
+
+msgid "Create widget"
+msgstr "Creer un widget"
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Language"
+msgstr "Langue"
+
+msgid "Location"
+msgstr "Lieu"
+
+msgid "Shortcode"
+msgstr "Code court"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Edit"
+msgstr "Modifier"
+
+msgid "Delete"
+msgstr "Supprimer"
+
+msgid "Edit widget"
+msgstr "Modifier le widget"
+
+msgid "Back to widgets"
+msgstr "Retour aux widgets"
+
+msgid "Unique name"
+msgstr "Nom unique"
+
+msgid "This name is used in shortcode, block, and widget pickers."
+msgstr "Ce nom est utilise dans les selecteurs de shortcodes, de blocs et de widgets."
+
+msgid "English"
+msgstr "Anglais"
+
+msgid "French"
+msgstr "Francais"
+
+msgid "Country"
+msgstr "Pays"
+
+msgid "Region"
+msgstr "Region"
+
+msgid "Days to show"
+msgstr "Nombre de jours"
+
+msgid "Display options"
+msgstr "Options d'affichage"
+
+msgid "Include title"
+msgstr "Inclure le titre"
+
+msgid "Include map"
+msgstr "Inclure la carte"
+
+msgid "Include weather"
+msgstr "Inclure la meteo"
+
+msgid "Include base styles"
+msgstr "Inclure les styles de base"
+
+msgid "Custom CSS"
+msgstr "CSS personnalise"
+
+msgid "If filled, this CSS is printed inline with the widget on the front end."
+msgstr "Si ce champ est renseigne, ce CSS est affiche en ligne avec le widget sur le site."
+
+msgid "Weather unit"
+msgstr "Unite meteo"
+
+msgid "Celsius"
+msgstr "Celsius"
+
+msgid "Fahrenheit"
+msgstr "Fahrenheit"
+
+msgid "Height unit"
+msgstr "Unite de hauteur"
+
+msgid "Meters"
+msgstr "Metres"
+
+msgid "Feet"
+msgstr "Pieds"
+
+msgid "Update widget"
+msgstr "Mettre a jour le widget"
+
+msgid "Save widget"
+msgstr "Enregistrer le widget"
+
+msgid "Live preview"
+msgstr "Apercu en direct"
+
+msgid "The preview updates after you choose a location and whenever you change the widget options."
+msgstr "L'apercu se met a jour apres le choix d'un lieu et chaque fois que vous modifiez les options du widget."
+
+msgid "Usage"
+msgstr "Utilisation"
+
+msgid "Use this shortcode anywhere shortcodes are supported:"
+msgstr "Utilisez ce shortcode partout ou les shortcodes sont pris en charge :"
+
+msgid "The same saved widget will also appear in the classic Widgets screen and in the Gutenberg block dropdown."
+msgstr "Le meme widget enregistre apparaitra aussi dans l'ecran classique des widgets et dans la liste deroulante des blocs Gutenberg."
+
+msgid "You do not have permission to save Tides Today widgets."
+msgstr "Vous n'avez pas l'autorisation d'enregistrer les widgets Tides Today."
+
+msgid "Please complete every required field before saving."
+msgstr "Veuillez remplir tous les champs obligatoires avant d'enregistrer."
+
+msgid "Widget names must be unique."
+msgstr "Les noms des widgets doivent etre uniques."
+
+msgid "The selected country is no longer available."
+msgstr "Le pays selectionne n'est plus disponible."
+
+msgid "The selected region is no longer available."
+msgstr "La region selectionnee n'est plus disponible."
+
+msgid "The selected location is no longer available."
+msgstr "Le lieu selectionne n'est plus disponible."
+
+msgid "You do not have permission to delete Tides Today widgets."
+msgstr "Vous n'avez pas l'autorisation de supprimer les widgets Tides Today."
+
+msgid "Saved Tides Today widget not found."
+msgstr "Widget Tides Today enregistre introuvable."
+
+msgid "Unknown proxy script requested."
+msgstr "Le script proxy demande est inconnu."
+
+msgid "Tides Today Tides and Weather requires PHP %1$s or newer. You are running %2$s."
+msgstr "Tides Today Marees et meteo exige PHP %1$s ou plus recent. Vous utilisez %2$s."
+
+msgid "Tides Today Tides and Weather requires WordPress %1$s or newer. You are running %2$s."
+msgstr "Tides Today Marees et meteo exige WordPress %1$s ou plus recent. Vous utilisez %2$s."
+
+msgid "The PHP JSON extension is required."
+msgstr "L'extension PHP JSON est requise."
+
+msgid "Either the PHP cURL or OpenSSL extension is required to fetch Tides Today data over HTTPS."
+msgstr "L'extension PHP cURL ou OpenSSL est requise pour recuperer les donnees Tides Today via HTTPS."
+
+msgid "Tides Today returned invalid JSON."
+msgstr "Tides Today a renvoye un JSON invalide."
+
+msgid "The Tides Today service could not be reached."
+msgstr "Le service Tides Today est inaccessible."
+
+msgid "Tides Today returned an unexpected response."
+msgstr "Tides Today a renvoye une reponse inattendue."
+
+msgid "A complete preview location was not provided."
+msgstr "Un lieu d'apercu complet n'a pas ete fourni."
+
+msgid "Widget saved successfully."
+msgstr "Widget enregistre avec succes."
+
+msgid "Widget deleted successfully."
+msgstr "Widget supprime avec succes."
+
+msgid "Something went wrong."
+msgstr "Un probleme est survenu."
+
+msgid "Visit Tides Today"
+msgstr "Visiter Tides Today"
+
+msgid "Find on Facebook"
+msgstr "Retrouver sur Facebook"
+
+msgid "Follow on X"
+msgstr "Suivre sur X"
+
+msgid "Subscribe on Youtube"
+msgstr "S'abonner sur YouTube"
+
+msgid "Follow on Instagram"
+msgstr "Suivre sur Instagram"
