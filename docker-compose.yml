@@ -20,7 +20,7 @@ services:
             - db
         image: wordpress:latest
         volumes:
-            - .:/var/www/html/wp-content/plugins/tides-today-tide-times
+            - .:/var/www/html/wp-content/plugins/tides-today-tides-and-weather
         ports:
             - "8000:80"
         restart: always

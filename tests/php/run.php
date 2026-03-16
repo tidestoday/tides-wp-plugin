@@ -1,6 +1,14 @@
 <?php
 
-define('ABSPATH', dirname(dirname(__DIR__)) . '/');
+if (! defined('ABSPATH') && 'cli' !== PHP_SAPI) {
+	exit;
+}
+
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals, WordPress.Security.EscapeOutput, WordPress.PHP.DevelopmentFunctions, WordPress.WP.AlternativeFunctions
+
+if (! defined('ABSPATH')) {
+	define('ABSPATH', dirname(dirname(__DIR__)) . '/');
+}
 
 if (! function_exists('absint')) {
 	function absint($value) {
@@ -158,10 +166,10 @@ $tests['get_init_query_args_from_settings produces widget query arguments'] = fu
 $tests['French locale packs exist for both France and French Canada'] = function () {
 	$base_dir = dirname(dirname(__DIR__)) . '/languages/';
 
-	tttw_assert_true(file_exists($base_dir . 'tides-today-fr_FR.po'), 'The fr_FR PO file should exist.');
-	tttw_assert_true(file_exists($base_dir . 'tides-today-fr_FR.mo'), 'The fr_FR MO file should exist.');
-	tttw_assert_true(file_exists($base_dir . 'tides-today-fr_CA.po'), 'The fr_CA PO file should exist.');
-	tttw_assert_true(file_exists($base_dir . 'tides-today-fr_CA.mo'), 'The fr_CA MO file should exist.');
+	tttw_assert_true(file_exists($base_dir . 'tides-today-tides-and-weather-fr_FR.po'), 'The fr_FR PO file should exist.');
+	tttw_assert_true(file_exists($base_dir . 'tides-today-tides-and-weather-fr_FR.mo'), 'The fr_FR MO file should exist.');
+	tttw_assert_true(file_exists($base_dir . 'tides-today-tides-and-weather-fr_CA.po'), 'The fr_CA PO file should exist.');
+	tttw_assert_true(file_exists($base_dir . 'tides-today-tides-and-weather-fr_CA.mo'), 'The fr_CA MO file should exist.');
 	tttw_assert_true(! file_exists($base_dir . 'tides-today-cy.po'), 'The legacy Welsh PO file should be removed.');
 	tttw_assert_true(! file_exists($base_dir . 'tides-today-cy.mo'), 'The legacy Welsh MO file should be removed.');
 };

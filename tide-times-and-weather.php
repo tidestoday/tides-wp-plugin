@@ -8,7 +8,7 @@ Author:      Stephen Wright
 Author URI:  https://tides.today/
 License:     GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Text Domain: tides-today
+Text Domain: tides-today-tides-and-weather
 Domain Path: /languages
 Requires at least: 5.0
 Requires PHP: 5.5
