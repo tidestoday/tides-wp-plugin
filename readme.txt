@@ -2,9 +2,9 @@
 Contributors: sjwright1986
 Tags: tides, weather, shortcode, gutenberg, widget
 Requires at least: 5.0
-Tested up to: 6.3
+Tested up to: 6.9
 Requires PHP: 5.5
-Stable tag: trunk
+Stable tag: 2.0.0
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
