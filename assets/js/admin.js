@@ -25,7 +25,6 @@
 		locations: []
 	};
 	var previewToken = 0;
-	var previewRenderTimer = 0;
 
 	function setStatus(message, isError) {
 		$status.text(message || '');
@@ -126,18 +125,9 @@
 			includeWeather: $form.find('#tttw-include-weather').is(':checked'),
 			includeStyles: $form.find('#tttw-include-styles').is(':checked'),
 			includeTitle: $form.find('#tttw-include-title').is(':checked'),
-			customCss: $form.find('#tttw-custom-css').val() || '',
 			weatherUnit: $form.find('#tttw-weather-unit').val() || 'c',
 			heightUnit: $form.find('#tttw-height-unit').val() || 'm'
 		};
-	}
-
-	function schedulePreviewRender(delay) {
-		window.clearTimeout(previewRenderTimer);
-		previewRenderTimer = window.setTimeout(function () {
-			previewRenderTimer = 0;
-			renderPreview();
-		}, delay || 0);
 	}
 
 	function buildPreviewUrl(scriptName, selection, settings) {
@@ -163,7 +153,6 @@
 	function buildPreviewDocument(selection, settings, token) {
 		var widgetSrc = escapeAttribute(buildPreviewUrl('widget.js', selection, settings));
 		var containerId = 'tidewidget__' + selection.location.id;
-		var customCss = JSON.stringify(String(settings.customCss || '')).replace(/</g, '\\u003c');
 		var previewConfig = JSON.stringify({
 			includeMap: !! settings.includeMap,
 			includeWeather: !! settings.includeWeather,
@@ -178,30 +167,13 @@
 			'<!doctype html>',
 			'<html><head><meta charset="utf-8" />',
 			'<meta name="viewport" content="width=device-width, initial-scale=1" />',
-			'<style>',
+			'<sty' + 'le>',
 			'html,body{margin:0;padding:0;background:#fff;}',
 			'body{padding:16px;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}',
 			'#tttw-preview-root{min-height:280px;}',
 			'#tttw-preview-root,#tttw-preview-root *{font-family:inherit !important;}',
 			'a{color:inherit;}',
-			'</style>',
-			'<scr' + 'ipt>',
-			'(function(){',
-			'var css=' + customCss + ';',
-			'var style;',
-			'if(!css){',
-			'return;',
-			'}',
-			'style=document.createElement("style");',
-			'style.type="text/css";',
-			'if(style.styleSheet){',
-			'style.styleSheet.cssText=css;',
-			'}else{',
-			'style.appendChild(document.createTextNode(css));',
-			'}',
-			'document.head.appendChild(style);',
-			'}());',
-			'</scr' + 'ipt>',
+			'</sty' + 'le>',
 			'</head><body>',
 			'<div id="tttw-preview-root">',
 			'<div id="' + escapeAttribute(containerId) + '"></div>',
@@ -463,14 +435,6 @@
 
 	$form.on('change', '#tttw-number-days, #tttw-include-title, #tttw-include-map, #tttw-include-weather, #tttw-include-styles, #tttw-weather-unit, #tttw-height-unit', function () {
 		renderPreview();
-	});
-
-	$form.on('change', '#tttw-custom-css', function () {
-		renderPreview();
-	});
-
-	$form.on('input', '#tttw-custom-css', function () {
-		schedulePreviewRender(250);
 	});
 
 	$('.tttw-delete-form').on('submit', function () {

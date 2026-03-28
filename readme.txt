@@ -3,7 +3,7 @@ Contributors: sjwright1986
 Tags: tides, weather, shortcode, gutenberg, widget
 Requires at least: 5.0
 Tested up to: 6.9
-Requires PHP: 5.5
+Requires PHP: 7.0
 Stable tag: 2.0.0
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -22,8 +22,9 @@ Features include:
 * Shortcode output for every saved widget
 * Classic sidebar widget support
 * Gutenberg block support with a dropdown of saved widgets
-* Proxied `widget.js` and `widget-init.js` output served from the site's own domain
+* Proxied `widget.js` and `widget-init.js` assets enqueued from the site's own domain
 * WordPress cache-backed API and proxy fetching to reduce repeated remote requests
+* Styling support via WordPress' built-in Additional CSS tools and theme styles
 
 == Installation ==
 
@@ -52,9 +53,29 @@ Save a widget in `Tides Today`, then either:
 
 Yes. Countries, regions, locations, and proxied widget script fetches are cached with WordPress cache APIs.
 
+= How do I style a widget? =
+
+Use WordPress' built-in Additional CSS feature or your theme's stylesheet tools.
+
+Each rendered widget includes the base class `.tttw-widget-host` and a widget-specific class like `.tttw-widget-host--tttw_abc123def456`, so you can target one widget or all widgets without saving custom CSS inside the plugin.
+
 = What versions are supported? =
 
-The plugin is built for WordPress 5.0+ and PHP 5.5+.
+The plugin is built for WordPress 5.0+ and PHP 7.0+.
+
+== External services ==
+
+This plugin connects to the Tides Today widget API at `api.tidestoday.io` to load the list of available countries, regions, and locations, and to fetch the widget JavaScript required to display tide and weather data.
+
+When an administrator uses the widget builder, the plugin sends the selected widget language and selected location identifiers or slugs to the Tides Today service to retrieve catalog data and preview assets.
+
+When a saved widget is displayed on the public site, the plugin requests the Tides Today widget JavaScript for the saved language, country, region, location, and display options so the widget can render current tide and weather information.
+
+Those requests are made from your WordPress site server to the Tides Today service. The requests include your site URL in the user agent string for service identification and debugging. Site visitors do not send data directly from their browsers to `api.tidestoday.io`; the plugin proxies and caches the service responses through WordPress.
+
+Terms of Service: https://tides.today/en/terms-of-service
+
+Privacy Policy: https://tides.today/en/privacy-policy
 
 == Changelog ==
 
