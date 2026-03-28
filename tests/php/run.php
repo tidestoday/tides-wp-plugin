@@ -71,7 +71,6 @@ $tests['sanitize_widget_settings normalizes values and clamps ranges'] = functio
 				'include_weather' => '1',
 				'include_styles'  => 0,
 				'include_title'   => 'yes',
-				'custom_css'      => "<style>\r\n.tides-widget__container { color: red; }\r",
 				'weather_unit'    => 'invalid',
 				'height_unit'     => 'yards',
 			),
@@ -85,8 +84,7 @@ $tests['sanitize_widget_settings normalizes values and clamps ranges'] = functio
 	tttw_assert_same(true, $settings['include_title'], 'Yes should be normalized to true.');
 	tttw_assert_same('c', $settings['weather_unit'], 'Invalid weather units should fall back to Celsius.');
 	tttw_assert_same('m', $settings['height_unit'], 'Invalid height units should fall back to meters.');
-	tttw_assert_true(false === strpos($settings['custom_css'], '<'), 'Custom CSS should strip opening angle brackets.');
-	tttw_assert_true(false === strpos($settings['custom_css'], "\r"), 'Custom CSS should normalize carriage returns.');
+	tttw_assert_true(! isset($settings['custom_css']), 'Custom CSS should not be stored by the plugin.');
 };
 
 $tests['reorder_countries promotes English priority countries in the expected order'] = function () use ($plugin) {

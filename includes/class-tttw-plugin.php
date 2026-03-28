@@ -18,6 +18,7 @@ class TTTW_Plugin {
 	private static $instance = null;
 
 	private $environment_errors = null;
+	private $frontend_script_queue = array();
 
 	public static function instance() {
 		if (null === self::$instance) {
@@ -487,17 +488,17 @@ class TTTW_Plugin {
 											</tr>
 											<tr>
 												<th scope="row">
-													<label for="tttw-custom-css"><?php esc_html_e('Custom CSS', 'tides-today-tides-and-weather'); ?></label>
+													<label><?php esc_html_e('Style in WordPress', 'tides-today-tides-and-weather'); ?></label>
 												</th>
 												<td>
-													<textarea
-														id="tttw-custom-css"
-														name="custom_css"
-														rows="8"
-														class="large-text code"
-														placeholder=".tides-widget__container { border-radius: 12px; }"
-													><?php echo esc_textarea($settings['custom_css']); ?></textarea>
-													<p class="description"><?php esc_html_e('If filled, this CSS is printed inline with the widget on the front end.', 'tides-today-tides-and-weather'); ?></p>
+													<p class="description"><?php esc_html_e('Use WordPress\' built-in Additional CSS or your theme styles to customize the widget appearance.', 'tides-today-tides-and-weather'); ?></p>
+													<p class="description"><code>.tttw-widget-host</code></p>
+													<?php if ($editing_widget) : ?>
+														<p class="description"><code>.tttw-widget-host--<?php echo esc_html($editing_widget['id']); ?></code></p>
+													<?php endif; ?>
+													<?php if ($this->can_show_customizer_link()) : ?>
+														<p><a class="button button-secondary" href="<?php echo esc_url($this->get_customizer_css_url()); ?>"><?php esc_html_e('Open Additional CSS', 'tides-today-tides-and-weather'); ?></a></p>
+													<?php endif; ?>
 												</td>
 											</tr>
 											<tr>
@@ -699,13 +700,12 @@ class TTTW_Plugin {
 					array(
 						'number_days'     => isset($_POST['number_days']) ? sanitize_text_field(wp_unslash($_POST['number_days'])) : '',
 						'include_map'     => ! empty($_POST['include_map']),
-						'include_weather' => ! empty($_POST['include_weather']),
-						'include_styles'  => ! empty($_POST['include_styles']),
-						'include_title'   => ! empty($_POST['include_title']),
-						'custom_css'      => isset($_POST['custom_css']) ? wp_strip_all_tags(wp_unslash($_POST['custom_css']), false) : '',
-						'weather_unit'    => isset($_POST['weather_unit']) ? sanitize_text_field(wp_unslash($_POST['weather_unit'])) : '',
-						'height_unit'     => isset($_POST['height_unit']) ? sanitize_text_field(wp_unslash($_POST['height_unit'])) : '',
-					)
+					'include_weather' => ! empty($_POST['include_weather']),
+					'include_styles'  => ! empty($_POST['include_styles']),
+					'include_title'   => ! empty($_POST['include_title']),
+					'weather_unit'    => isset($_POST['weather_unit']) ? sanitize_text_field(wp_unslash($_POST['weather_unit'])) : '',
+					'height_unit'     => isset($_POST['height_unit']) ? sanitize_text_field(wp_unslash($_POST['height_unit'])) : '',
+				)
 				),
 			'created_at' => ! empty($widgets[ $widget_id ]['created_at']) ? $widgets[ $widget_id ]['created_at'] : $timestamp,
 			'updated_at' => $timestamp,
@@ -905,16 +905,10 @@ class TTTW_Plugin {
 		}
 
 		$container_id = $this->get_container_id($widget);
-		$widget_src   = esc_url($this->get_proxy_url($widget, 'widget.js'));
-		$init_src     = esc_url($this->get_proxy_url($widget, 'widget-init.js'));
-		$custom_css   = $this->get_widget_custom_css_markup($widget);
 
-		return $custom_css .
-			// phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript -- Third-party embed markup requires a direct widget.js tag.
-			'<script type="text/javascript" src="' . $widget_src . '" async></script>' .
-			// phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript -- Third-party embed markup requires a direct widget-init.js tag.
-			'<script type="text/javascript" src="' . $init_src . '" async></script>' .
-			'<div id="' . esc_attr($container_id) . '"></div>';
+		$this->enqueue_saved_widget_assets($widget);
+
+		return '<div id="' . esc_attr($container_id) . '" class="tttw-widget-host tttw-widget-host--' . esc_attr($widget['id']) . '" data-tttw-widget="' . esc_attr($widget['id']) . '"></div>';
 	}
 
 	public function get_widgets() {
@@ -986,11 +980,11 @@ class TTTW_Plugin {
 
 		$errors = array();
 
-			if (version_compare(PHP_VERSION, '5.5', '<')) {
+			if (version_compare(PHP_VERSION, '7.0', '<')) {
 				$errors[] = sprintf(
 					/* translators: 1: Minimum supported PHP version, 2: Current PHP version. */
 					__('Tides Today Tides and Weather requires PHP %1$s or newer. You are running %2$s.', 'tides-today-tides-and-weather'),
-					'5.5',
+					'7.0',
 					PHP_VERSION
 				);
 			}
@@ -1113,7 +1107,6 @@ class TTTW_Plugin {
 			'include_weather' => true,
 			'include_styles'  => true,
 			'include_title'   => true,
-			'custom_css'      => '',
 			'weather_unit'    => 'c',
 			'height_unit'     => 'm',
 		);
@@ -1129,7 +1122,6 @@ class TTTW_Plugin {
 		$settings['include_weather'] = $this->sanitize_boolean_setting(isset($raw_settings['include_weather']) ? $raw_settings['include_weather'] : $defaults['include_weather']);
 		$settings['include_styles']  = $this->sanitize_boolean_setting(isset($raw_settings['include_styles']) ? $raw_settings['include_styles'] : $defaults['include_styles']);
 		$settings['include_title']   = $this->sanitize_boolean_setting(isset($raw_settings['include_title']) ? $raw_settings['include_title'] : $defaults['include_title']);
-		$settings['custom_css']      = $this->sanitize_custom_css(isset($raw_settings['custom_css']) ? $raw_settings['custom_css'] : $defaults['custom_css']);
 		$settings['weather_unit']    = (isset($raw_settings['weather_unit']) && in_array($raw_settings['weather_unit'], array('c', 'f'), true)) ? $raw_settings['weather_unit'] : $defaults['weather_unit'];
 		$settings['height_unit']     = (isset($raw_settings['height_unit']) && in_array($raw_settings['height_unit'], array('m', 'ft'), true)) ? $raw_settings['height_unit'] : $defaults['height_unit'];
 
@@ -1160,32 +1152,8 @@ class TTTW_Plugin {
 		return ! empty($value);
 	}
 
-	private function sanitize_custom_css($value) {
-		$value = is_string($value) ? $value : '';
-		$value = str_replace("\r", '', $value);
-
-		if (function_exists('wp_kses_no_null')) {
-			$value = wp_kses_no_null($value, array('slash_zero' => 'keep'));
-		}
-
-		// Strip "<" so CSS can be safely printed inside a <style> tag.
-		$value = str_replace('<', '', $value);
-
-		return trim($value);
-	}
-
 	private function get_shortcode_string($widget) {
 		return sprintf('[tides_today_widget id="%s"]', $widget['id']);
-	}
-
-	private function get_widget_custom_css_markup($widget) {
-		$settings = $this->get_widget_settings($widget);
-
-		if (empty($settings['custom_css'])) {
-			return '';
-		}
-
-		return '<style type="text/css" data-tttw-widget="' . esc_attr($widget['id']) . '">' . $settings['custom_css'] . '</style>';
 	}
 
 	private function get_block_widget_data() {
@@ -1509,9 +1477,40 @@ class TTTW_Plugin {
 		return 'tidewidget__' . absint($widget['location']['id']);
 	}
 
+	private function enqueue_saved_widget_assets($widget) {
+		$widget_handle = 'tttw-widget-' . $widget['id'];
+		$init_handle   = 'tttw-widget-init-' . $widget['id'];
+
+		if (isset($this->frontend_script_queue[ $init_handle ])) {
+			return;
+		}
+
+		wp_enqueue_script(
+			$widget_handle,
+			$this->get_proxy_url($widget, 'widget.js'),
+			array(),
+			$this->get_widget_asset_version($widget),
+			true
+		);
+
+		wp_enqueue_script(
+			$init_handle,
+			$this->get_proxy_url($widget, 'widget-init.js'),
+			array($widget_handle),
+			$this->get_widget_asset_version($widget),
+			true
+		);
+
+		$this->frontend_script_queue[ $init_handle ] = true;
+	}
+
+	private function get_widget_asset_version($widget) {
+		return substr(md5($widget['id'] . $widget['updated_at']), 0, 10);
+	}
+
 	private function get_proxy_url($widget, $script) {
 		$args = array(
-			'rev' => substr(md5($widget['id'] . $widget['updated_at']), 0, 10),
+			'rev' => $this->get_widget_asset_version($widget),
 		);
 
 		if ('widget-init.js' === $script) {
@@ -1653,6 +1652,14 @@ class TTTW_Plugin {
 				'fill' => true,
 			),
 		);
+	}
+
+	private function can_show_customizer_link() {
+		return current_user_can('customize');
+	}
+
+	private function get_customizer_css_url() {
+		return admin_url('customize.php?autofocus[section]=custom_css');
 	}
 
 	private function get_overview_icon_markup($icon) {

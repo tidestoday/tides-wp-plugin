@@ -11,7 +11,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: tides-today-tides-and-weather
 Domain Path: /languages
 Requires at least: 5.0
-Requires PHP: 5.5
+Requires PHP: 7.0
 */
 
 if (! defined('ABSPATH')) {
