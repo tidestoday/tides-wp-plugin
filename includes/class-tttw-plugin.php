@@ -128,13 +128,13 @@ class TTTW_Plugin {
 		}
 
 		if ($result instanceof WP_REST_Response) {
-			$data = $result->get_data();
+			$body_safe = $result->get_data();
 		} else {
-			$data = $result;
+			$body_safe = $result;
 		}
 
-		if (! is_string($data)) {
-			$data = '';
+		if (! is_string($body_safe)) {
+			$body_safe = '';
 		}
 
 		if (function_exists('status_header')) {
@@ -144,8 +144,9 @@ class TTTW_Plugin {
 		header('Content-Type: application/javascript; charset=' . get_option('blog_charset'), true);
 		header('Cache-Control: max-age=' . self::SCRIPT_TTL . ', must-revalidate', true);
 
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Proxy endpoints must return raw JavaScript.
-		echo $data;
+		// This endpoint intentionally serves vetted JavaScript rather than REST JSON.
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Raw JavaScript must be served without HTML escaping.
+		echo $body_safe;
 
 		return true;
 	}
@@ -290,7 +291,7 @@ class TTTW_Plugin {
 							<div class="tttw-overview__intro">
 								<img
 									class="tttw-overview__logo"
-									src="<?php echo esc_url('https://tides-assets.lon1.cdn.digitaloceanspaces.com/prod/media/Halo_750x750_min_d0b74a0f1e.png'); ?>"
+									src="<?php echo esc_url(TTTW_PLUGIN_URL . 'assets/images/tides-today-logo.png'); ?>"
 									alt="<?php esc_attr_e('Tides Today logo', 'tides-today-tides-and-weather'); ?>"
 								/>
 								<div>
@@ -366,6 +367,17 @@ class TTTW_Plugin {
 						<?php endif; ?>
 					</div>
 				<?php else : ?>
+					<div class="tttw-card">
+						<h2><?php esc_html_e('Usage', 'tides-today-tides-and-weather'); ?></h2>
+						<?php if ($editing_widget) : ?>
+							<p><?php esc_html_e('Use this shortcode anywhere shortcodes are supported:', 'tides-today-tides-and-weather'); ?></p>
+							<code class="tttw-shortcode"><?php echo esc_html($this->get_shortcode_string($editing_widget)); ?></code>
+							<p><?php esc_html_e('The same saved widget will also appear in the classic Widgets screen and in the Gutenberg block dropdown.', 'tides-today-tides-and-weather'); ?></p>
+						<?php else : ?>
+							<p><?php esc_html_e('Once your widget has been saved, usage instructions will appear here.', 'tides-today-tides-and-weather'); ?></p>
+						<?php endif; ?>
+					</div>
+
 					<div class="tttw-card tttw-card--main">
 						<div class="tttw-card__header">
 							<h2><?php echo $editing_widget ? esc_html__('Edit widget', 'tides-today-tides-and-weather') : esc_html__('Create widget', 'tides-today-tides-and-weather'); ?></h2>
@@ -492,10 +504,15 @@ class TTTW_Plugin {
 												</th>
 												<td>
 													<p class="description"><?php esc_html_e('Use WordPress\' built-in Additional CSS or your theme styles to customize the widget appearance.', 'tides-today-tides-and-weather'); ?></p>
-													<p class="description"><code>.tttw-widget-host</code></p>
-													<?php if ($editing_widget) : ?>
-														<p class="description"><code>.tttw-widget-host--<?php echo esc_html($editing_widget['id']); ?></code></p>
-													<?php endif; ?>
+													<div class="tttw-styling-help">
+														<h3><?php esc_html_e('Styling your widget', 'tides-today-tides-and-weather'); ?></h3>
+														<p class="description"><?php esc_html_e('Use these classes in Additional CSS or your theme stylesheet to override the widget presentation.', 'tides-today-tides-and-weather'); ?></p>
+														<p class="description"><code>.tttw-widget-host</code> <?php esc_html_e('targets every Tides Today widget on your site.', 'tides-today-tides-and-weather'); ?></p>
+														<?php if ($editing_widget) : ?>
+															<p class="description"><code>.tttw-widget-host--<?php echo esc_html($editing_widget['id']); ?></code> <?php esc_html_e('targets only this saved widget.', 'tides-today-tides-and-weather'); ?></p>
+														<?php endif; ?>
+														<p class="description"><code>.tttw-widget-host .tides-widget__container</code> <?php esc_html_e('is a good starting point for spacing, borders, and colors.', 'tides-today-tides-and-weather'); ?></p>
+													</div>
 													<?php if ($this->can_show_customizer_link()) : ?>
 														<p><a class="button button-secondary" href="<?php echo esc_url($this->get_customizer_css_url()); ?>"><?php esc_html_e('Open Additional CSS', 'tides-today-tides-and-weather'); ?></a></p>
 													<?php endif; ?>
@@ -557,14 +574,6 @@ class TTTW_Plugin {
 						</div>
 					</div>
 
-					<?php if ($editing_widget) : ?>
-						<div class="tttw-card">
-							<h2><?php esc_html_e('Usage', 'tides-today-tides-and-weather'); ?></h2>
-							<p><?php esc_html_e('Use this shortcode anywhere shortcodes are supported:', 'tides-today-tides-and-weather'); ?></p>
-							<code class="tttw-shortcode"><?php echo esc_html($this->get_shortcode_string($editing_widget)); ?></code>
-							<p><?php esc_html_e('The same saved widget will also appear in the classic Widgets screen and in the Gutenberg block dropdown.', 'tides-today-tides-and-weather'); ?></p>
-						</div>
-					<?php endif; ?>
 				<?php endif; ?>
 			</div>
 		</div>

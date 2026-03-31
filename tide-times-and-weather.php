@@ -3,7 +3,7 @@
 Plugin Name: Tides Today Tides and Weather
 Plugin URI:  https://tides.today/en/wordpress-plugin
 Description: Build reusable Tides Today tide and weather widgets for shortcodes, sidebars, and the block editor.
-Version:     2.0.0
+Version:     2.0.1
 Author:      Stephen Wright
 Author URI:  https://tides.today/
 License:     GPL2
@@ -21,7 +21,7 @@ if (! defined('ABSPATH')) {
 define('TTTW_PLUGIN_FILE', __FILE__);
 define('TTTW_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('TTTW_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('TTTW_PLUGIN_VERSION', '2.0.0');
+define('TTTW_PLUGIN_VERSION', '2.0.1');
 
 require_once TTTW_PLUGIN_DIR . 'includes/class-tttw-widget.php';
 require_once TTTW_PLUGIN_DIR . 'includes/class-tttw-plugin.php';

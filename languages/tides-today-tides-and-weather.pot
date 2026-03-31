@@ -1,0 +1,476 @@
+# Copyright (C) 2026 Stephen Wright
+# This file is distributed under the GPL2.
+msgid ""
+msgstr ""
+"Project-Id-Version: Tides Today Tides and Weather 2.0.1\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tides-today-tides-and-weather\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-03-31T09:51:15+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: tides-today-tides-and-weather\n"
+
+#. Plugin Name of the plugin
+#: tide-times-and-weather.php
+#: includes/class-tttw-plugin.php:212
+#: includes/class-tttw-plugin.php:282
+#: includes/class-tttw-plugin.php:298
+#: includes/class-tttw-widget.php:12
+#: assets/js/block.js:27
+#: assets/js/block.js:64
+msgid "Tides Today Tides and Weather"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: tide-times-and-weather.php
+msgid "https://tides.today/en/wordpress-plugin"
+msgstr ""
+
+#. Description of the plugin
+#: tide-times-and-weather.php
+msgid "Build reusable Tides Today tide and weather widgets for shortcodes, sidebars, and the block editor."
+msgstr ""
+
+#. Author of the plugin
+#: tide-times-and-weather.php
+msgid "Stephen Wright"
+msgstr ""
+
+#. Author URI of the plugin
+#: tide-times-and-weather.php
+msgid "https://tides.today/"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:183
+msgid "Loading Tides Today data..."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:184
+#: includes/class-tttw-plugin.php:437
+msgid "Select a country"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:185
+#: includes/class-tttw-plugin.php:447
+msgid "Select a region"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:186
+#: includes/class-tttw-plugin.php:457
+msgid "Select a location"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:187
+msgid "Choose a language first"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:188
+msgid "Choose a country first"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:189
+msgid "Choose a region first"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:190
+msgid "We could not load data from Tides Today. Please try again."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:191
+msgid "Delete this saved widget?"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:192
+#: includes/class-tttw-plugin.php:564
+msgid "Choose a location to preview the widget."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:193
+msgid "Loading live preview..."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:194
+msgid "We could not build the live preview right now."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:195
+#: includes/class-tttw-plugin.php:569
+msgid "Tides Today widget preview"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:213
+#: assets/js/block.js:28
+msgid "Insert a saved Tides Today tide and weather widget."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:214
+#: includes/class-tttw-widget.php:41
+#: assets/js/block.js:41
+#: assets/js/block.js:74
+msgid "Select a saved widget"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:215
+#: assets/js/block.js:71
+msgid "Choose which saved widget to embed on the front end."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:216
+#: assets/js/block.js:71
+msgid "Create a saved widget in Tides Today before using this block."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:217
+#: assets/js/block.js:94
+msgid "Saved widgets are managed in the Tides Today admin screen."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:227
+#: includes/class-tttw-plugin.php:228
+msgid "Tides Today"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:238
+#: includes/class-tttw-plugin.php:239
+msgid "All widgets"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:247
+#: includes/class-tttw-plugin.php:248
+msgid "Add Widget"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:262
+msgid "Tides Today Tides and Weather cannot finish loading:"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:273
+#: includes/class-tttw-plugin.php:1187
+msgid "You do not have permission to manage Tides Today widgets."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:283
+msgid "Create reusable tide and weather widgets for shortcodes, sidebars, and the block editor."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:295
+msgid "Tides Today logo"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:299
+msgid "The Tides Today Tides and Weather Plugin allows you to add tide times and weather, for over 8,000 locations world-wide."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:320
+#: includes/class-tttw-plugin.php:329
+msgid "Saved widgets"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:321
+msgid "There are no Tides Today widgets yet. Create one to get started"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:324
+msgid "Create a widget"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:331
+#: includes/class-tttw-plugin.php:383
+msgid "Create widget"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:338
+msgid "Name"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:339
+#: includes/class-tttw-plugin.php:418
+msgid "Language"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:340
+#: includes/class-tttw-plugin.php:453
+msgid "Location"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:341
+msgid "Shortcode"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:342
+msgid "Actions"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:354
+msgid "Edit"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:360
+msgid "Delete"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:371
+msgid "Usage"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:373
+msgid "Use this shortcode anywhere shortcodes are supported:"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:375
+msgid "The same saved widget will also appear in the classic Widgets screen and in the Gutenberg block dropdown."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:377
+msgid "Once your widget has been saved, usage instructions will appear here."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:383
+msgid "Edit widget"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:385
+msgid "Back to widgets"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:402
+msgid "Unique name"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:413
+msgid "This name is used in shortcode, block, and widget pickers."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:423
+#: includes/class-tttw-plugin.php:1594
+msgid "English"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:426
+#: includes/class-tttw-plugin.php:1594
+msgid "French"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:433
+msgid "Country"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:443
+msgid "Region"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:463
+msgid "Days to show"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:476
+msgid "Display options"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:481
+msgid "Include title"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:486
+msgid "Include map"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:491
+msgid "Include weather"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:496
+msgid "Include base styles"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:503
+msgid "Style in WordPress"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:506
+msgid "Use WordPress' built-in Additional CSS or your theme styles to customize the widget appearance."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:508
+msgid "Styling your widget"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:509
+msgid "Use these classes in Additional CSS or your theme stylesheet to override the widget presentation."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:510
+msgid "targets every Tides Today widget on your site."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:512
+msgid "targets only this saved widget."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:514
+msgid "is a good starting point for spacing, borders, and colors."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:517
+msgid "Open Additional CSS"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:523
+msgid "Weather unit"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:527
+msgid "Celsius"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:528
+msgid "Fahrenheit"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:534
+msgid "Height unit"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:538
+msgid "Meters"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:539
+msgid "Feet"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:548
+msgid "Update widget"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:548
+msgid "Save widget"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:560
+msgid "Live preview"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:561
+msgid "The preview updates after you choose a location and whenever you change the widget options."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:585
+msgid "You do not have permission to save Tides Today widgets."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:602
+msgid "Please complete every required field before saving."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:617
+msgid "Widget names must be unique."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:642
+msgid "The selected country is no longer available."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:666
+msgid "The selected region is no longer available."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:690
+msgid "The selected location is no longer available."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:737
+msgid "You do not have permission to delete Tides Today widgets."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:839
+msgid "Saved Tides Today widget not found."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:847
+msgid "Unknown proxy script requested."
+msgstr ""
+
+#. translators: 1: Minimum supported PHP version, 2: Current PHP version.
+#: includes/class-tttw-plugin.php:995
+#, php-format
+msgid "Tides Today Tides and Weather requires PHP %1$s or newer. You are running %2$s."
+msgstr ""
+
+#. translators: 1: Minimum supported WordPress version, 2: Current WordPress version.
+#: includes/class-tttw-plugin.php:1004
+#, php-format
+msgid "Tides Today Tides and Weather requires WordPress %1$s or newer. You are running %2$s."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1011
+msgid "The PHP JSON extension is required."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1015
+msgid "Either the PHP cURL or OpenSSL extension is required to fetch Tides Today data over HTTPS."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1320
+msgid "Tides Today returned invalid JSON."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1344
+msgid "The Tides Today service could not be reached."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1351
+msgid "Tides Today returned an unexpected response."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1417
+msgid "A complete preview location was not provided."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1575
+msgid "Widget saved successfully."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1578
+msgid "Widget deleted successfully."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1582
+msgid "Something went wrong."
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1600
+msgid "Visit Tides Today"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1605
+msgid "Find on Facebook"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1610
+msgid "Follow on X"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1615
+msgid "Subscribe on Youtube"
+msgstr ""
+
+#: includes/class-tttw-plugin.php:1620
+msgid "Follow on Instagram"
+msgstr ""
+
+#: includes/class-tttw-widget.php:14
+msgid "Display a saved Tides Today tide and weather widget."
+msgstr ""
+
+#: includes/class-tttw-widget.php:39
+msgid "Saved widget"
+msgstr ""
+
+#: includes/class-tttw-widget.php:52
+msgid "Create your first saved widget in Tides Today."
+msgstr ""
