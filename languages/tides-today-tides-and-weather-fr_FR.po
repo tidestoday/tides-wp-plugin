@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Tides Today Tides and Weather\n"
-"POT-Creation-Date: 2026-03-15 00:00+0000\n"
-"PO-Revision-Date: 2026-03-15 00:00+0000\n"
+"POT-Creation-Date: 2026-03-31 09:51+0000\n"
+"PO-Revision-Date: 2026-03-31 09:51+0000\n"
 "Last-Translator: Codex\n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -177,11 +177,29 @@ msgstr "Inclure la meteo"
 msgid "Include base styles"
 msgstr "Inclure les styles de base"
 
-msgid "Custom CSS"
-msgstr "CSS personnalise"
+msgid "Style in WordPress"
+msgstr "Style dans WordPress"
 
-msgid "If filled, this CSS is printed inline with the widget on the front end."
-msgstr "Si ce champ est renseigne, ce CSS est affiche en ligne avec le widget sur le site."
+msgid "Use WordPress' built-in Additional CSS or your theme styles to customize the widget appearance."
+msgstr "Utilisez le CSS additionnel integre a WordPress ou les styles de votre theme pour personnaliser l'apparence du widget."
+
+msgid "Styling your widget"
+msgstr "Styliser votre widget"
+
+msgid "Use these classes in Additional CSS or your theme stylesheet to override the widget presentation."
+msgstr "Utilisez ces classes dans le CSS additionnel ou la feuille de style de votre theme pour personnaliser l'affichage du widget."
+
+msgid "targets every Tides Today widget on your site."
+msgstr "cible tous les widgets Tides Today de votre site."
+
+msgid "targets only this saved widget."
+msgstr "cible uniquement ce widget enregistre."
+
+msgid "is a good starting point for spacing, borders, and colors."
+msgstr "constitue un bon point de depart pour les espacements, les bordures et les couleurs."
+
+msgid "Open Additional CSS"
+msgstr "Ouvrir le CSS additionnel"
 
 msgid "Weather unit"
 msgstr "Unite meteo"
@@ -221,6 +239,9 @@ msgstr "Utilisez ce shortcode partout ou les shortcodes sont pris en charge :"
 
 msgid "The same saved widget will also appear in the classic Widgets screen and in the Gutenberg block dropdown."
 msgstr "Le meme widget enregistre apparaitra aussi dans l'ecran classique des widgets et dans la liste deroulante des blocs Gutenberg."
+
+msgid "Once your widget has been saved, usage instructions will appear here."
+msgstr "Une fois votre widget enregistre, les instructions d'utilisation apparaitront ici."
 
 msgid "You do not have permission to save Tides Today widgets."
 msgstr "Vous n'avez pas l'autorisation d'enregistrer les widgets Tides Today."

@@ -1,4 +1,8 @@
+.distignore
+.github/
+.gitignore
 README.md
+docker-compose.yml
 docker/
 node_modules/
 tests/

@@ -1,10 +1,10 @@
 === Tides Today Tides and Weather ===
-Contributors: sjwright1986
+Contributors: tidestoday, sjwright1986
 Tags: tides, weather, shortcode, gutenberg, widget
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.0
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,11 +73,16 @@ When a saved widget is displayed on the public site, the plugin requests the Tid
 
 Those requests are made from your WordPress site server to the Tides Today service. The requests include your site URL in the user agent string for service identification and debugging. Site visitors do not send data directly from their browsers to `api.tidestoday.io`; the plugin proxies and caches the service responses through WordPress.
 
+Map and weather assets are also loaded from `https://tides-assets.lon1.digitaloceanspaces.com` when the widget renders. This is required because it is not practical to bundle and maintain map and weather image assets for more than 8,000 supported locations inside the plugin package.
+
 Terms of Service: https://tides.today/en/terms-of-service
 
 Privacy Policy: https://tides.today/en/privacy-policy
 
 == Changelog ==
+
+= 2.0.1 =
+Ensured the plugin fully complies with WordPress' plugin guidelines.
 
 = 2.0.0 =
 Rebuilt the plugin around saved widgets, shortcode output, classic widget support, Gutenberg integration, proxied script delivery, and WordPress-backed API caching.
