@@ -22,6 +22,7 @@ jobs:
       - name: Run Plugin Check
         uses: wordpress/plugin-check-action@v1.1.5
         with:
+          slug: tides-today-tides-and-weather
           include-experimental: true
           exclude-directories: |
             .github
