@@ -1,0 +1,33 @@
+name: Plugin Check
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  plugin-check:
+    name: Plugin Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run Plugin Check
+        uses: wordpress/plugin-check-action@v1.1.5
+        with:
+          include-experimental: true
+          exclude-directories: |
+            .github
+            tests
+            docker
+            node_modules
+          exclude-files: |
+            .distignore
+            .gitignore
+            README.md
+            docker-compose.yml
