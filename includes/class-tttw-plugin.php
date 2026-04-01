@@ -10,7 +10,6 @@ class TTTW_Plugin {
 	const CACHE_PREFIX   = 'tttw_cache_';
 	const ADMIN_SLUG     = 'tttw-builder';
 	const ADMIN_ADD_SLUG = 'tttw-add-widget';
-	const REST_NAMESPACE = 'tides-today-tides-and-weather/v1';
 	const CATALOG_TTL    = 86400;
 	const SCRIPT_TTL     = 300;
 	const API_BASE       = 'https://api.tidestoday.io/widgets-api/js-v1';
@@ -45,12 +44,11 @@ class TTTW_Plugin {
 		add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
 		add_action('init', array($this, 'register_runtime_features'));
 		add_action('widgets_init', array($this, 'register_sidebar_widget'));
-		add_action('rest_api_init', array($this, 'register_rest_routes'));
-		add_filter('rest_pre_serve_request', array($this, 'serve_proxy_rest_response'), 10, 4);
 		add_action('enqueue_block_editor_assets', array($this, 'enqueue_block_editor_assets'));
 		add_action('wp_ajax_tttw_get_countries', array($this, 'ajax_get_countries'));
 		add_action('wp_ajax_tttw_get_regions', array($this, 'ajax_get_regions'));
 		add_action('wp_ajax_tttw_get_locations', array($this, 'ajax_get_locations'));
+		add_action('wp_ajax_tttw_get_preview_scripts', array($this, 'ajax_get_preview_scripts'));
 		add_action('admin_post_tttw_save_widget', array($this, 'handle_save_widget'));
 		add_action('admin_post_tttw_delete_widget', array($this, 'handle_delete_widget'));
 	}
@@ -98,59 +96,6 @@ class TTTW_Plugin {
 		register_widget('TTTW_Sidebar_Widget');
 	}
 
-	public function register_rest_routes() {
-		register_rest_route(
-			self::REST_NAMESPACE,
-			'/proxy/(?P<widget_id>[A-Za-z0-9_-]+)/(?P<script>widget(?:-init)?\.js)',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array($this, 'handle_proxy_request'),
-				'permission_callback' => '__return_true',
-			)
-		);
-
-		register_rest_route(
-			self::REST_NAMESPACE,
-			'/preview/(?P<script>widget(?:-init)?\.js)',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array($this, 'handle_preview_proxy_request'),
-				'permission_callback' => '__return_true',
-			)
-		);
-	}
-
-	public function serve_proxy_rest_response($served, $result, $request, $server) {
-		$route = $request instanceof WP_REST_Request ? $request->get_route() : '';
-
-		if (0 !== strpos($route, '/' . self::REST_NAMESPACE . '/proxy/') && 0 !== strpos($route, '/' . self::REST_NAMESPACE . '/preview/')) {
-			return $served;
-		}
-
-		if ($result instanceof WP_REST_Response) {
-			$body_safe = $result->get_data();
-		} else {
-			$body_safe = $result;
-		}
-
-		if (! is_string($body_safe)) {
-			$body_safe = '';
-		}
-
-		if (function_exists('status_header')) {
-			status_header(200);
-		}
-
-		header('Content-Type: application/javascript; charset=' . get_option('blog_charset'), true);
-		header('Cache-Control: max-age=' . self::SCRIPT_TTL . ', must-revalidate', true);
-
-		// This endpoint intentionally serves vetted JavaScript rather than REST JSON.
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Raw JavaScript must be served without HTML escaping.
-		echo $body_safe;
-
-		return true;
-	}
-
 	public function enqueue_admin_assets($hook_suffix) {
 		if (false === strpos($hook_suffix, self::ADMIN_SLUG) && false === strpos($hook_suffix, self::ADMIN_ADD_SLUG)) {
 			return;
@@ -177,7 +122,6 @@ class TTTW_Plugin {
 			array(
 				'ajaxUrl'       => admin_url('admin-ajax.php'),
 				'nonce'         => wp_create_nonce('tttw_admin'),
-				'previewBaseUrl' => trailingslashit(rest_url(self::REST_NAMESPACE . '/preview')),
 				'currentWidget' => $this->get_editing_widget(),
 				'i18n'          => array(
 					'loading'             => __('Loading Tides Today data...', 'tides-today-tides-and-weather'),
@@ -830,45 +774,43 @@ class TTTW_Plugin {
 		);
 	}
 
-	public function handle_proxy_request($request) {
-		$widget_id = sanitize_key($request['widget_id']);
-		$script    = isset($request['script']) ? sanitize_text_field($request['script']) : '';
-		$widget    = $this->get_widget($widget_id);
-
-		if (empty($widget)) {
-			return $this->javascript_response($this->build_console_error_script(__('Saved Tides Today widget not found.', 'tides-today-tides-and-weather')));
+	public function ajax_get_preview_scripts() {
+		if (! current_user_can('manage_options')) {
+			wp_send_json_error(
+				array(
+					'message' => __('You do not have permission to manage Tides Today widgets.', 'tides-today-tides-and-weather'),
+				),
+				403
+			);
 		}
 
-		if ('widget.js' === $script) {
-			$body = $this->get_runtime_proxy_script($widget);
-		} elseif ('widget-init.js' === $script) {
-			$body = $this->get_init_proxy_script($widget);
-		} else {
-			$body = new WP_Error('tttw_invalid_script', __('Unknown proxy script requested.', 'tides-today-tides-and-weather'));
-		}
+		check_ajax_referer('tttw_admin', 'nonce');
 
-		if (is_wp_error($body)) {
-			return $this->javascript_response($this->build_console_error_script($body->get_error_message()));
-		}
+		$request = new WP_REST_Request('GET');
+		$request->set_param('language', isset($_GET['language']) ? sanitize_text_field(wp_unslash($_GET['language'])) : '');
+		$request->set_param('countrySlug', isset($_GET['countrySlug']) ? sanitize_text_field(wp_unslash($_GET['countrySlug'])) : '');
+		$request->set_param('regionSlug', isset($_GET['regionSlug']) ? sanitize_text_field(wp_unslash($_GET['regionSlug'])) : '');
+		$request->set_param('locationSlug', isset($_GET['locationSlug']) ? sanitize_text_field(wp_unslash($_GET['locationSlug'])) : '');
+		$request->set_param('numberDays', isset($_GET['numberDays']) ? sanitize_text_field(wp_unslash($_GET['numberDays'])) : '');
+		$request->set_param('includeMap', isset($_GET['includeMap']) ? sanitize_text_field(wp_unslash($_GET['includeMap'])) : '');
+		$request->set_param('includeWeather', isset($_GET['includeWeather']) ? sanitize_text_field(wp_unslash($_GET['includeWeather'])) : '');
+		$request->set_param('includeStyles', isset($_GET['includeStyles']) ? sanitize_text_field(wp_unslash($_GET['includeStyles'])) : '');
+		$request->set_param('includeTitle', isset($_GET['includeTitle']) ? sanitize_text_field(wp_unslash($_GET['includeTitle'])) : '');
+		$request->set_param('weatherUnit', isset($_GET['weatherUnit']) ? sanitize_text_field(wp_unslash($_GET['weatherUnit'])) : '');
+		$request->set_param('heightUnit', isset($_GET['heightUnit']) ? sanitize_text_field(wp_unslash($_GET['heightUnit'])) : '');
 
-		return $this->javascript_response($body);
-	}
-
-	public function handle_preview_proxy_request($request) {
-		$script  = isset($request['script']) ? sanitize_text_field($request['script']) : '';
 		$preview = $this->get_preview_request_context($request);
 
 		if (is_wp_error($preview)) {
-			return $this->javascript_response($this->build_console_error_script($preview->get_error_message()));
+			wp_send_json_error(
+				array(
+					'message' => $preview->get_error_message(),
+				),
+				400
+			);
 		}
 
-		$body = $this->get_cached_remote_body($this->build_preview_script_url($preview, $script), self::SCRIPT_TTL);
-
-		if (is_wp_error($body)) {
-			return $this->javascript_response($this->build_console_error_script($body->get_error_message()));
-		}
-
-		return $this->javascript_response($body);
+		wp_send_json_success($this->get_preview_script_payload($preview));
 	}
 
 	public function render_shortcode($atts) {
@@ -1331,12 +1273,13 @@ class TTTW_Plugin {
 			return $cached;
 		}
 
-		$response = wp_remote_get(
+		$response = wp_safe_remote_get(
 			$url,
 			array(
-				'timeout'    => 15,
+				'timeout'          => 15,
 				'redirection' => 3,
-				'user-agent' => 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION . '; ' . home_url('/'),
+				'reject_unsafe_urls' => true,
+				'user-agent'       => 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION,
 			)
 		);
 
@@ -1389,20 +1332,12 @@ class TTTW_Plugin {
 		return $this->get_cached_remote_body($this->build_remote_script_url($widget, 'widget.js'), self::SCRIPT_TTL);
 	}
 
-	private function get_init_proxy_script($widget) {
-		return $this->get_cached_remote_body($this->build_remote_script_url($widget, 'widget-init.js'), self::SCRIPT_TTL);
-	}
-
 	private function build_remote_script_url($widget, $script) {
 		$url = trailingslashit(self::API_BASE) .
 			rawurlencode($widget['language']) . '/' .
 			rawurlencode($widget['country']['slug']) . '/' .
 			rawurlencode($widget['region']['slug']) . '/' .
 			rawurlencode($widget['location']['slug']) . '/' . $script;
-
-		if ('widget-init.js' === $script) {
-			$url = add_query_arg($this->get_init_query_args($widget), $url);
-		}
 
 		return $url;
 	}
@@ -1443,15 +1378,7 @@ class TTTW_Plugin {
 			rawurlencode($preview['region_slug']) . '/' .
 			rawurlencode($preview['location_slug']) . '/' . $script;
 
-		if ('widget-init.js' === $script) {
-			$url = add_query_arg($this->get_init_query_args_from_settings($preview['settings']), $url);
-		}
-
 		return $url;
-	}
-
-	private function get_init_query_args($widget) {
-		return $this->get_init_query_args_from_settings($this->get_widget_settings($widget));
 	}
 
 	private function get_init_query_args_from_settings($settings) {
@@ -1460,6 +1387,18 @@ class TTTW_Plugin {
 			'includeWeather' => $settings['include_weather'] ? 'true' : 'false',
 			'includeStyles'  => $settings['include_styles'] ? 'true' : 'false',
 			'includeTitle'   => $settings['include_title'] ? 'true' : 'false',
+			'numberDays'     => (int) $settings['number_days'],
+			'weatherUnit'    => $settings['weather_unit'],
+			'heightUnit'     => $settings['height_unit'],
+		);
+	}
+
+	private function get_init_config_from_settings($settings) {
+		return array(
+			'includeMap'     => (bool) $settings['include_map'],
+			'includeWeather' => (bool) $settings['include_weather'],
+			'includeStyles'  => (bool) $settings['include_styles'],
+			'includeTitle'   => (bool) $settings['include_title'],
 			'numberDays'     => (int) $settings['number_days'],
 			'weatherUnit'    => $settings['weather_unit'],
 			'heightUnit'     => $settings['height_unit'],
@@ -1488,57 +1427,87 @@ class TTTW_Plugin {
 
 	private function enqueue_saved_widget_assets($widget) {
 		$widget_handle = 'tttw-widget-' . $widget['id'];
-		$init_handle   = 'tttw-widget-init-' . $widget['id'];
+		$payload       = $this->get_saved_widget_script_payload($widget);
 
-		if (isset($this->frontend_script_queue[ $init_handle ])) {
+		if (isset($this->frontend_script_queue[ $widget_handle ])) {
 			return;
 		}
 
+		wp_register_script(
+			$widget_handle,
+			TTTW_PLUGIN_URL . 'assets/js/runtime.js',
+			array(),
+			$this->get_asset_version('assets/js/runtime.js'),
+			true
+		);
+
 		wp_enqueue_script(
 			$widget_handle,
-			$this->get_proxy_url($widget, 'widget.js'),
+			TTTW_PLUGIN_URL . 'assets/js/runtime.js',
 			array(),
 			$this->get_widget_asset_version($widget),
 			true
 		);
 
-		wp_enqueue_script(
-			$init_handle,
-			$this->get_proxy_url($widget, 'widget-init.js'),
-			array($widget_handle),
-			$this->get_widget_asset_version($widget),
-			true
-		);
+		wp_add_inline_script($widget_handle, $payload['runtime'], 'before');
+		wp_add_inline_script($widget_handle, $payload['init']);
 
-		$this->frontend_script_queue[ $init_handle ] = true;
+		$this->frontend_script_queue[ $widget_handle ] = true;
 	}
 
 	private function get_widget_asset_version($widget) {
 		return substr(md5($widget['id'] . $widget['updated_at']), 0, 10);
 	}
 
-	private function get_proxy_url($widget, $script) {
-		$args = array(
-			'rev' => $this->get_widget_asset_version($widget),
-		);
-
-		if ('widget-init.js' === $script) {
-			$args = array_merge($args, $this->get_init_query_args($widget));
-		}
-
-		return add_query_arg($args, rest_url(self::REST_NAMESPACE . '/proxy/' . rawurlencode($widget['id']) . '/' . $script));
-	}
-
-	private function javascript_response($body) {
-		$response = new WP_REST_Response($body, 200);
-		$response->header('Content-Type', 'application/javascript; charset=' . get_option('blog_charset'));
-		$response->header('Cache-Control', 'max-age=' . self::SCRIPT_TTL . ', must-revalidate');
-
-		return $response;
-	}
-
 	private function build_console_error_script($message) {
 		return 'console.error(' . wp_json_encode($message) . ');';
+	}
+
+	private function get_saved_widget_script_payload($widget) {
+		$runtime = $this->get_runtime_proxy_script($widget);
+		$init    = $this->build_widget_init_script($this->get_container_id($widget), $this->get_widget_settings($widget));
+
+		return $this->normalize_script_payload($runtime, $init);
+	}
+
+	private function get_preview_script_payload($preview) {
+		$runtime = $this->get_cached_remote_body($this->build_preview_script_url($preview, 'widget.js'), self::SCRIPT_TTL);
+
+		return $this->normalize_script_payload($runtime, '');
+	}
+
+	private function normalize_script_payload($runtime, $init) {
+		if (is_wp_error($runtime)) {
+			$runtime = $this->build_console_error_script($runtime->get_error_message());
+		}
+
+		if (is_wp_error($init)) {
+			$init = $this->build_console_error_script($init->get_error_message());
+		}
+
+		return array(
+			'runtime' => is_string($runtime) ? $runtime : '',
+			'init'    => is_string($init) ? $init : '',
+		);
+	}
+
+	private function build_widget_init_script($container_id, $settings) {
+		return '(function(){' .
+			'var initialized=false;' .
+			'var containerId=' . wp_json_encode((string) $container_id) . ';' .
+			'var config=' . wp_json_encode($this->get_init_config_from_settings($settings)) . ';' .
+			'var init=function(){' .
+				'if(initialized||typeof createTideInstance!=="function"){return;}' .
+				'initialized=true;' .
+				'createTideInstance(containerId,config);' .
+			'};' .
+			'if(document.readyState==="loading"){' .
+				'document.addEventListener("DOMContentLoaded",init,{once:true});' .
+				'window.addEventListener("load",init,{once:true});' .
+			'}else{' .
+				'init();' .
+			'}' .
+		'}());';
 	}
 
 	private function redirect_to_admin($query_args) {
