@@ -1273,12 +1273,13 @@ class TTTW_Plugin {
 			return $cached;
 		}
 
-		$response = wp_remote_get(
+		$response = wp_safe_remote_get(
 			$url,
 			array(
-				'timeout'    => 15,
+				'timeout'          => 15,
 				'redirection' => 3,
-				'user-agent' => 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION . '; ' . home_url('/'),
+				'reject_unsafe_urls' => true,
+				'user-agent'       => 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION,
 			)
 		);
 
