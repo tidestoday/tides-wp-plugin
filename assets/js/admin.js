@@ -130,9 +130,10 @@
 		};
 	}
 
-	function buildPreviewUrl(scriptName, selection, settings) {
-		var baseUrl = TTTWAdmin.previewBaseUrl + scriptName;
-		var query = $.param({
+	function getPreviewRequestData(selection, settings) {
+		return {
+			action: 'tttw_get_preview_scripts',
+			nonce: TTTWAdmin.nonce,
 			language: selection.language,
 			countrySlug: selection.country.slug,
 			regionSlug: selection.region.slug,
@@ -144,14 +145,10 @@
 			includeTitle: settings.includeTitle ? 'true' : 'false',
 			weatherUnit: settings.weatherUnit,
 			heightUnit: settings.heightUnit
-		});
-		var separator = baseUrl.indexOf('?') === -1 ? '?' : '&';
-
-		return baseUrl + separator + query;
+		};
 	}
 
-	function buildPreviewDocument(selection, settings, token) {
-		var widgetSrc = escapeAttribute(buildPreviewUrl('widget.js', selection, settings));
+	function buildPreviewDocument(selection, settings, token, scripts) {
 		var containerId = 'tidewidget__' + selection.location.id;
 		var previewConfig = JSON.stringify({
 			includeMap: !! settings.includeMap,
@@ -162,6 +159,7 @@
 			weatherUnit: settings.weatherUnit,
 			heightUnit: settings.heightUnit
 		});
+		var runtimeScript = JSON.stringify(String((scripts && scripts.runtime) || '')).replace(/</g, '\\u003c');
 
 		return [
 			'<!doctype html>',
@@ -177,7 +175,6 @@
 			'</head><body>',
 			'<div id="tttw-preview-root">',
 			'<div id="' + escapeAttribute(containerId) + '"></div>',
-			'<scr' + 'ipt type="text/javascript" src="' + widgetSrc + '"></scr' + 'ipt>',
 			'<scr' + 'ipt>',
 			'(function(){',
 			'var attempts=0;',
@@ -185,6 +182,9 @@
 			'var token=' + JSON.stringify(token) + ';',
 			'var containerId=' + JSON.stringify(containerId) + ';',
 			'var config=' + previewConfig + ';',
+			'var runtimeScript=' + runtimeScript + ';',
+			'var append=function(code){var script=document.createElement("script");script.type="text/javascript";script.appendChild(document.createTextNode(code));document.body.appendChild(script);};',
+			'if(runtimeScript){append(runtimeScript);}',
 			'var send=function(){',
 			'var height=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,320);',
 			'parent.postMessage({type:"tttwPreviewHeight",token:token,height:height},"*");',
@@ -234,7 +234,7 @@
 		var selection = getPreviewSelection();
 		var settings = getPreviewSettings();
 		var frame = $previewFrame.get(0);
-		var documentHtml;
+		var token;
 
 		if (! frame) {
 			return;
@@ -255,18 +255,42 @@
 		}
 
 		previewToken += 1;
-		documentHtml = buildPreviewDocument(selection, settings, previewToken);
+		token = previewToken;
 
 		setPreviewPlaceholder(TTTWAdmin.i18n.previewLoading, false);
 		$previewFrame.addClass('is-active').css('height', '360px');
 
-		try {
-			frame.contentWindow.document.open();
-			frame.contentWindow.document.write(documentHtml);
-			frame.contentWindow.document.close();
-		} catch (error) {
-			setPreviewPlaceholder(TTTWAdmin.i18n.previewError, true);
-		}
+		$.getJSON(TTTWAdmin.ajaxUrl, getPreviewRequestData(selection, settings))
+			.done(function (response) {
+				var documentHtml;
+
+				if (token !== previewToken) {
+					return;
+				}
+
+				if (! response || ! response.success || ! response.data) {
+					setPreviewPlaceholder(TTTWAdmin.i18n.previewError, true);
+					return;
+				}
+
+				documentHtml = buildPreviewDocument(selection, settings, token, response.data);
+
+				try {
+					frame.contentWindow.document.open();
+					frame.contentWindow.document.write(documentHtml);
+					frame.contentWindow.document.close();
+					setStatus(TTTWAdmin.i18n.previewTitle, false);
+				} catch (error) {
+					setPreviewPlaceholder(TTTWAdmin.i18n.previewError, true);
+				}
+			})
+			.fail(function () {
+				if (token !== previewToken) {
+					return;
+				}
+
+				setPreviewPlaceholder(TTTWAdmin.i18n.previewError, true);
+			});
 	}
 
 	function request(action, data) {
