@@ -4,7 +4,7 @@ Tags: tides, weather, shortcode, gutenberg, widget
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.0
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -80,6 +80,9 @@ Terms of Service: https://tides.today/en/terms-of-service
 Privacy Policy: https://tides.today/en/privacy-policy
 
 == Changelog ==
+
+= 2.0.3 =
+Fixes and added uninstall script.
 
 = 2.0.2 =
 Tightened remote request safety and removed the site URL from the service user agent.
