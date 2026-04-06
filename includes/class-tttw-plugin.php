@@ -300,7 +300,7 @@ class TTTW_Plugin {
 												<form class="tttw-inline-form tttw-delete-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 													<input type="hidden" name="action" value="tttw_delete_widget" />
 													<input type="hidden" name="widget_id" value="<?php echo esc_attr($widget['id']); ?>" />
-													<?php wp_nonce_field('tttw_delete_widget_' . $widget['id'], 'tttw_delete_nonce'); ?>
+													<?php wp_nonce_field('tttw_delete_widget', 'tttw_delete_nonce'); ?>
 													<button type="submit" class="button-link-delete"><?php esc_html_e('Delete', 'tides-today-tides-and-weather'); ?></button>
 												</form>
 											</td>
@@ -681,9 +681,9 @@ class TTTW_Plugin {
 			wp_die(esc_html__('You do not have permission to delete Tides Today widgets.', 'tides-today-tides-and-weather'));
 		}
 
-		$widget_id = isset($_POST['widget_id']) ? sanitize_key(wp_unslash($_POST['widget_id'])) : '';
+		check_admin_referer('tttw_delete_widget', 'tttw_delete_nonce');
 
-		check_admin_referer('tttw_delete_widget_' . $widget_id, 'tttw_delete_nonce');
+		$widget_id = isset($_POST['widget_id']) ? sanitize_key(wp_unslash($_POST['widget_id'])) : '';
 
 		$widgets = $this->get_widgets();
 
@@ -1265,7 +1265,7 @@ class TTTW_Plugin {
 		return $data;
 	}
 
-	private function get_cached_remote_body($url, $ttl) {
+	private function get_cached_remote_body($url, $ttl, $expected_content_type = '') {
 		$cache_key = $this->get_cache_key($url);
 		$cached    = $this->get_cached_value($cache_key);
 
@@ -1276,10 +1276,10 @@ class TTTW_Plugin {
 		$response = wp_safe_remote_get(
 			$url,
 			array(
-				'timeout'          => 15,
-				'redirection' => 3,
+				'timeout'            => 15,
+				'redirection'        => 3,
 				'reject_unsafe_urls' => true,
-				'user-agent'       => 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION,
+				'user-agent'         => 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION,
 			)
 		);
 
@@ -1292,6 +1292,13 @@ class TTTW_Plugin {
 
 		if ($response_code < 200 || $response_code >= 300 || '' === $body) {
 			return new WP_Error('tttw_remote_http_error', __('Tides Today returned an unexpected response.', 'tides-today-tides-and-weather'));
+		}
+
+		if ('' !== $expected_content_type) {
+			$content_type = wp_remote_retrieve_header($response, 'content-type');
+			if (false === strpos($content_type, $expected_content_type)) {
+				return new WP_Error('tttw_invalid_content_type', __('Tides Today returned an unexpected content type.', 'tides-today-tides-and-weather'));
+			}
 		}
 
 		$this->set_cached_value($cache_key, $body, $ttl);
@@ -1329,7 +1336,7 @@ class TTTW_Plugin {
 	}
 
 	private function get_runtime_proxy_script($widget) {
-		return $this->get_cached_remote_body($this->build_remote_script_url($widget, 'widget.js'), self::SCRIPT_TTL);
+		return $this->get_cached_remote_body($this->build_remote_script_url($widget, 'widget.js'), self::SCRIPT_TTL, 'javascript');
 	}
 
 	private function build_remote_script_url($widget, $script) {
@@ -1471,7 +1478,7 @@ class TTTW_Plugin {
 	}
 
 	private function get_preview_script_payload($preview) {
-		$runtime = $this->get_cached_remote_body($this->build_preview_script_url($preview, 'widget.js'), self::SCRIPT_TTL);
+		$runtime = $this->get_cached_remote_body($this->build_preview_script_url($preview, 'widget.js'), self::SCRIPT_TTL, 'javascript');
 
 		return $this->normalize_script_payload($runtime, '');
 	}
