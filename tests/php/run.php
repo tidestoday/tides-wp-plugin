@@ -16,6 +16,36 @@ if (! function_exists('absint')) {
 	}
 }
 
+if (! function_exists('trailingslashit')) {
+	function trailingslashit($value) {
+		return rtrim($value, '/') . '/';
+	}
+}
+
+if (! function_exists('sanitize_key')) {
+	function sanitize_key($value) {
+		return strtolower(preg_replace('/[^a-z0-9_\-]/', '', (string) $value));
+	}
+}
+
+if (! function_exists('sanitize_text_field')) {
+	function sanitize_text_field($value) {
+		return trim(strip_tags((string) $value));
+	}
+}
+
+if (! function_exists('esc_url_raw')) {
+	function esc_url_raw($value) {
+		return filter_var((string) $value, FILTER_SANITIZE_URL);
+	}
+}
+
+if (! function_exists('__')) {
+	function __($value) {
+		return $value;
+	}
+}
+
 require_once dirname(dirname(__DIR__)) . '/includes/class-tttw-plugin.php';
 
 function tttw_create_plugin_without_constructor() {
@@ -159,6 +189,66 @@ $tests['get_init_query_args_from_settings produces widget query arguments'] = fu
 		$args,
 		'Init query arguments should match the saved widget settings.'
 	);
+};
+
+$tests['build_widget_data_url targets the data endpoint'] = function () use ($plugin) {
+	$url = tttw_call_private_method(
+		$plugin,
+		'build_widget_data_url',
+		array(
+			array(
+				'language' => 'en',
+				'country'  => array('slug' => 'wales'),
+				'region'   => array('slug' => 'conwy'),
+				'location' => array('slug' => 'llandudno'),
+			)
+		)
+	);
+
+	tttw_assert_same(
+		'https://api.tidestoday.io/widgets-api/js-v1/en/wales/conwy/llandudno/data.json',
+		$url,
+		'Widget data URLs should point to data.json, not remote JavaScript.'
+	);
+};
+
+$tests['normalize_widget_data preserves tide and weather values'] = function () use ($plugin) {
+	$data = tttw_call_private_method(
+		$plugin,
+		'normalize_widget_data',
+		array(
+			array(
+				'id'          => 511,
+				'location'    => 'Llandudno',
+				'locationUrl' => 'https://tides.today/en/wales/conwy/llandudno',
+				'termsUrl'    => 'https://tides.today/en/terms-of-service',
+				'map'         => 'https://cdn.tidestoday.media/prod/maps/test.webp',
+				'data'        => array(
+					array(
+						'date'    => '30 April 2026',
+						'tides'   => array(
+							array('time' => '05:02', 'heightM' => 1.01, 'heightF' => 3.31, 'type' => 'low'),
+							array('time' => '10:50', 'heightM' => 7.16, 'heightF' => 23.49, 'type' => 'high'),
+						),
+						'weather' => array(
+							'description' => 'Patchy rain nearby',
+							'icon'        => 'https://cdn.tidestoday.media/prod/weather-icons/1063.svg',
+							'highF'       => 62.78,
+							'lowF'        => 42.98,
+							'highC'       => 17.1,
+							'lowC'        => 6.1,
+						),
+					),
+				),
+			)
+		)
+	);
+
+	tttw_assert_same(511, $data['id'], 'Location ID should be normalized as an integer.');
+	tttw_assert_same('Llandudno', $data['location'], 'Location name should be preserved.');
+	tttw_assert_same('low', $data['days'][0]['tides'][0]['type'], 'Tide type should be normalized as a key.');
+	tttw_assert_same(7.16, $data['days'][0]['tides'][1]['heightM'], 'Metric tide heights should be preserved.');
+	tttw_assert_same(17.1, $data['days'][0]['weather']['highC'], 'Metric weather values should be preserved.');
 };
 
 $tests['French locale packs exist for both France and French Canada'] = function () {

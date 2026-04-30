@@ -1,0 +1,123 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows:
+      - Plugin Check
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Determine release version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          version="$(awk -F ': *' 'tolower($1) == "stable tag" { print $2; exit }' readme.txt | tr -d '\r')"
+
+          if [ -z "$version" ]; then
+            printf 'Stable tag was not found in readme.txt.\n' >&2
+            exit 1
+          fi
+
+          if [ "$version" = "trunk" ]; then
+            printf 'Stable tag must be an explicit version, not trunk.\n' >&2
+            exit 1
+          fi
+
+          if [[ "$version" == v* ]]; then
+            printf 'Stable tag must not use a v prefix: %s\n' "$version" >&2
+            exit 1
+          fi
+
+          if ! [[ "$version" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]; then
+            printf 'Stable tag must be a numeric version like 2.1.0: %s\n' "$version" >&2
+            exit 1
+          fi
+
+          if git rev-parse --verify --quiet "refs/tags/$version" >/dev/null; then
+            printf 'Tag %s already exists; skipping release.\n' "$version"
+            printf 'should_release=false\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if gh release view "$version" >/dev/null 2>&1; then
+            printf 'Release %s already exists; skipping release.\n' "$version"
+            printf 'should_release=false\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          latest_tag="$(git tag --list '[0-9]*' | grep -E '^[0-9]+(\.[0-9]+){1,2}$' | sort -V | tail -n 1 || true)"
+
+          if [ -n "$latest_tag" ]; then
+            highest_version="$(printf '%s\n%s\n' "$latest_tag" "$version" | sort -V | tail -n 1)"
+
+            if [ "$highest_version" != "$version" ]; then
+              printf 'Stable tag %s is not greater than latest release tag %s; skipping release.\n' "$version" "$latest_tag"
+              printf 'should_release=false\n' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          printf 'should_release=true\n' >> "$GITHUB_OUTPUT"
+
+      - name: Package plugin
+        if: ${{ steps.version.outputs.should_release == 'true' }}
+        run: |
+          set -euo pipefail
+
+          plugin_slug="tides-today-tides-and-weather"
+          staging_dir="$(mktemp -d)"
+
+          cleanup() {
+            rm -rf "$staging_dir"
+          }
+
+          trap cleanup EXIT
+
+          mkdir -p "$staging_dir/$plugin_slug"
+
+          rsync -a \
+            --delete \
+            --exclude-from=".distignore" \
+            --exclude='.git/' \
+            --exclude="$plugin_slug.zip" \
+            ./ \
+            "$staging_dir/$plugin_slug/"
+
+          (
+            cd "$staging_dir"
+            zip -qr "$GITHUB_WORKSPACE/$plugin_slug.zip" "$plugin_slug"
+          )
+
+      - name: Create GitHub release
+        if: ${{ steps.version.outputs.should_release == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          gh release create "$VERSION" \
+            "tides-today-tides-and-weather.zip" \
+            --target "${{ github.event.workflow_run.head_sha }}" \
+            --title "$VERSION" \
+            --notes "Release $VERSION"
