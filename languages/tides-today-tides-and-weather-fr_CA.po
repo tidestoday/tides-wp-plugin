@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Tides Today Tides and Weather\n"
-"POT-Creation-Date: 2026-03-31 09:51+0000\n"
-"PO-Revision-Date: 2026-03-31 09:51+0000\n"
+"POT-Creation-Date: 2026-04-30 00:00+0000\n"
+"PO-Revision-Date: 2026-04-30 00:00+0000\n"
 "Last-Translator: Codex\n"
 "Language-Team: French (Canada)\n"
 "Language: fr_CA\n"
@@ -317,3 +317,46 @@ msgstr "S'abonner sur YouTube"
 
 msgid "Follow on Instagram"
 msgstr "Suivre sur Instagram"
+
+msgid "Tides Today returned incomplete widget data."
+msgstr "Tides Today a renvoye des donnees de widget incompletes."
+
+#. translators: %s: tide location name.
+msgid "Tide times for %s"
+msgstr "Horaires de maree pour %s"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Time"
+msgstr "Heure"
+
+msgid "Height"
+msgstr "Hauteur"
+
+msgid "High"
+msgstr "Haute"
+
+msgid "Low"
+msgstr "Basse"
+
+#. translators: 1: high temperature, 2: low temperature.
+msgid "%1$s high %2$s low"
+msgstr "%1$s max %2$s min"
+
+#. translators: %s: linked tide location name.
+msgid "See 7 days tide times and weather for %s"
+msgstr "Voir 7 jours d'horaires de maree et de meteo pour %s"
+
+msgid "Tide and weather data is predicted from scientific models or third party data. No guarantees are made regarding the accuracy, completeness, or suitability of data on this website. You are responsible for your own safety at sea."
+msgstr "Les donnees de maree et de meteo sont predites a partir de modeles scientifiques ou de donnees tierces. Aucune garantie n'est donnee quant a l'exactitude, l'exhaustivite ou l'adequation des donnees de ce site web. Vous etes responsable de votre propre securite en mer."
+
+#. translators: 1: copyright year, 2: linked service name, 3: linked terms and conditions text.
+msgid "Copyright %1$s %2$s. By using this data, you are agreeing to the %3$s."
+msgstr "Copyright %1$s %2$s. En utilisant ces donnees, vous acceptez les %3$s."
+
+msgid "Terms and Conditions"
+msgstr "Conditions generales"
+
+msgid "Tides Today widget data could not be loaded."
+msgstr "Les donnees du widget Tides Today n'ont pas pu etre chargees."

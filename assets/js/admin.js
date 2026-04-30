@@ -148,23 +148,23 @@
 		};
 	}
 
-	function buildPreviewDocument(selection, settings, token, scripts) {
+	function buildPreviewDocument(selection, settings, token, payload) {
 		var containerId = 'tidewidget__' + selection.location.id;
-		var previewConfig = JSON.stringify({
-			includeMap: !! settings.includeMap,
-			includeWeather: !! settings.includeWeather,
-			includeStyles: !! settings.includeStyles,
-			includeTitle: !! settings.includeTitle,
-			numberDays: parseInt(settings.numberDays, 10) || 1,
-			weatherUnit: settings.weatherUnit,
-			heightUnit: settings.heightUnit
-		});
-		var runtimeScript = JSON.stringify(String((scripts && scripts.runtime) || '')).replace(/</g, '\\u003c');
+		var runtimeUrl = String(TTTWAdmin.runtimeUrl || '');
+		var runtimeVersion = String(TTTWAdmin.runtimeVersion || '');
+		var cssUrl = String(TTTWAdmin.widgetCssUrl || '');
+		var cssVersion = String(TTTWAdmin.widgetCssVersion || '');
+		var runtimeData = JSON.stringify({ labels: (payload && payload.labels) || TTTWAdmin.widgetLabels || {} }).replace(/</g, '\\u003c');
+		var previewPayload = $.extend({}, payload || {}, { containerId: containerId });
+		var payloadJson = JSON.stringify(previewPayload).replace(/</g, '\\u003c');
+		var runtimeSrc = runtimeUrl + (runtimeVersion ? '?ver=' + encodeURIComponent(runtimeVersion) : '');
+		var cssHref = cssUrl + (cssVersion ? '?ver=' + encodeURIComponent(cssVersion) : '');
 
 		return [
 			'<!doctype html>',
 			'<html><head><meta charset="utf-8" />',
 			'<meta name="viewport" content="width=device-width, initial-scale=1" />',
+			settings.includeStyles && cssUrl ? '<link rel="stylesheet" href="' + escapeAttribute(cssHref) + '" />' : '',
 			'<sty' + 'le>',
 			'html,body{margin:0;padding:0;background:#fff;}',
 			'body{padding:16px;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}',
@@ -175,57 +175,29 @@
 			'</head><body>',
 			'<div id="tttw-preview-root">',
 			'<div id="' + escapeAttribute(containerId) + '"></div>',
+			'<scr' + 'ipt type="application/json" class="tttw-widget-payload" data-tttw-container="' + escapeAttribute(containerId) + '">' + payloadJson + '</scr' + 'ipt>',
 			'<scr' + 'ipt>',
 			'(function(){',
-			'var attempts=0;',
-			'var initialized=false;',
 			'var token=' + JSON.stringify(token) + ';',
-			'var containerId=' + JSON.stringify(containerId) + ';',
-			'var config=' + previewConfig + ';',
-			'var runtimeScript=' + runtimeScript + ';',
-			'var append=function(code){var script=document.createElement("script");script.type="text/javascript";script.appendChild(document.createTextNode(code));document.body.appendChild(script);};',
-			'if(runtimeScript){append(runtimeScript);}',
+			'window.TTTWRuntimeData=' + runtimeData + ';',
 			'var send=function(){',
 			'var height=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,320);',
 			'parent.postMessage({type:"tttwPreviewHeight",token:token,height:height},"*");',
 			'};',
-			'var init=function(){',
-			'if(initialized){',
-			'return;',
-			'}',
-			'if(typeof createTideInstance!=="function"){',
-			'attempts+=1;',
-			'if(attempts<40){window.setTimeout(init,50);}',
-			'return;',
-			'}',
-			'initialized=true;',
-			'try{',
-			'createTideInstance(containerId,config);',
-			'window.setTimeout(send,120);',
-			'window.setTimeout(send,600);',
-			'window.setTimeout(send,1400);',
-			'}catch(error){',
-			'initialized=false;',
-			'parent.postMessage({type:"tttwPreviewError",token:token,message:(error&&error.message)?error.message:"Preview init failed."},"*");',
-			'return;',
-			'}',
-			'};',
+			'window.tttwPreviewSendHeight=send;',
 			'window.addEventListener("load",function(){',
-			'init();',
 			'window.setTimeout(send,200);',
 			'window.setTimeout(send,900);',
 			'window.setTimeout(send,1800);',
 			'});',
 			'document.addEventListener("readystatechange",function(){',
-			'if(document.readyState==="interactive"||document.readyState==="complete"){',
-			'init();',
-			'}',
 			'send();',
 			'});',
-			'window.setTimeout(init,0);',
 			'window.setTimeout(send,60);',
 			'}());',
 			'</scr' + 'ipt>',
+			runtimeSrc ? '<scr' + 'ipt src="' + escapeAttribute(runtimeSrc) + '"></scr' + 'ipt>' : '',
+			'<scr' + 'ipt>if(window.tttwPreviewSendHeight){window.setTimeout(window.tttwPreviewSendHeight,120);window.setTimeout(window.tttwPreviewSendHeight,600);window.setTimeout(window.tttwPreviewSendHeight,1400);}</scr' + 'ipt>',
 			'</div></body></html>'
 		].join('');
 	}

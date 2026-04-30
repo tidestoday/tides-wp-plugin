@@ -6,18 +6,20 @@ if (! defined('ABSPATH')) {
 
 class TTTW_Plugin {
 	const OPTION_KEY     = 'tttw_widgets';
+	const CACHE_KEYS_OPTION = 'tttw_cache_keys';
 	const CACHE_GROUP    = 'tttw';
 	const CACHE_PREFIX   = 'tttw_cache_';
 	const ADMIN_SLUG     = 'tttw-builder';
 	const ADMIN_ADD_SLUG = 'tttw-add-widget';
 	const CATALOG_TTL    = 86400;
-	const SCRIPT_TTL     = 300;
+	const DATA_TTL       = 300;
 	const API_BASE       = 'https://api.tidestoday.io/widgets-api/js-v1';
 
 	private static $instance = null;
 
 	private $environment_errors = null;
-	private $frontend_script_queue = array();
+	private $frontend_script_queued = false;
+	private $frontend_style_queued = false;
 
 	public static function instance() {
 		if (null === self::$instance) {
@@ -122,6 +124,11 @@ class TTTW_Plugin {
 			array(
 				'ajaxUrl'       => admin_url('admin-ajax.php'),
 				'nonce'         => wp_create_nonce('tttw_admin'),
+				'runtimeUrl'    => TTTW_PLUGIN_URL . 'assets/js/runtime.js',
+				'runtimeVersion' => $this->get_asset_version('assets/js/runtime.js'),
+				'widgetCssUrl'  => TTTW_PLUGIN_URL . 'assets/css/widget.css',
+				'widgetCssVersion' => $this->get_asset_version('assets/css/widget.css'),
+				'widgetLabels'  => $this->get_widget_runtime_labels(),
 				'currentWidget' => $this->get_editing_widget(),
 				'i18n'          => array(
 					'loading'             => __('Loading Tides Today data...', 'tides-today-tides-and-weather'),
@@ -810,7 +817,18 @@ class TTTW_Plugin {
 			);
 		}
 
-		wp_send_json_success($this->get_preview_script_payload($preview));
+		$payload = $this->get_preview_widget_payload($preview);
+
+		if (is_wp_error($payload)) {
+			wp_send_json_error(
+				array(
+					'message' => $payload->get_error_message(),
+				),
+				500
+			);
+		}
+
+		wp_send_json_success($payload);
 	}
 
 	public function render_shortcode($atts) {
@@ -856,10 +874,12 @@ class TTTW_Plugin {
 		}
 
 		$container_id = $this->get_container_id($widget);
+		$payload      = $this->get_saved_widget_payload($widget, $container_id);
 
 		$this->enqueue_saved_widget_assets($widget);
 
-		return '<div id="' . esc_attr($container_id) . '" class="tttw-widget-host tttw-widget-host--' . esc_attr($widget['id']) . '" data-tttw-widget="' . esc_attr($widget['id']) . '"></div>';
+		return '<div id="' . esc_attr($container_id) . '" class="tttw-widget-host tttw-widget-host--' . esc_attr($widget['id']) . '" data-tttw-widget="' . esc_attr($widget['id']) . '"></div>' .
+			'<script type="application/json" class="tttw-widget-payload" data-tttw-container="' . esc_attr($container_id) . '">' . wp_json_encode($payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . '</script>';
 	}
 
 	public function get_widgets() {
@@ -1249,8 +1269,8 @@ class TTTW_Plugin {
 		);
 	}
 
-	private function get_cached_remote_json($url, $ttl) {
-		$body = $this->get_cached_remote_body($url, $ttl);
+	private function get_cached_remote_json($url, $ttl, $user_agent = '') {
+		$body = $this->get_cached_remote_body($url, $ttl, '', $user_agent);
 
 		if (is_wp_error($body)) {
 			return $body;
@@ -1265,8 +1285,8 @@ class TTTW_Plugin {
 		return $data;
 	}
 
-	private function get_cached_remote_body($url, $ttl, $expected_content_type = '') {
-		$cache_key = $this->get_cache_key($url);
+	private function get_cached_remote_body($url, $ttl, $expected_content_type = '', $user_agent = '') {
+		$cache_key = $this->get_cache_key($url . '|' . $user_agent);
 		$cached    = $this->get_cached_value($cache_key);
 
 		if (false !== $cached) {
@@ -1279,7 +1299,7 @@ class TTTW_Plugin {
 				'timeout'            => 15,
 				'redirection'        => 3,
 				'reject_unsafe_urls' => true,
-				'user-agent'         => 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION,
+				'user-agent'         => '' !== $user_agent ? $user_agent : 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION,
 			)
 		);
 
@@ -1323,6 +1343,22 @@ class TTTW_Plugin {
 	private function set_cached_value($cache_key, $value, $ttl) {
 		wp_cache_set($cache_key, $value, self::CACHE_GROUP, $ttl);
 		set_transient($cache_key, $value, $ttl);
+		$this->register_cache_key($cache_key);
+	}
+
+	private function register_cache_key($cache_key) {
+		$cache_keys = get_option(self::CACHE_KEYS_OPTION, array());
+
+		if (! is_array($cache_keys)) {
+			$cache_keys = array();
+		}
+
+		if (in_array($cache_key, $cache_keys, true)) {
+			return;
+		}
+
+		$cache_keys[] = $cache_key;
+		update_option(self::CACHE_KEYS_OPTION, $cache_keys, false);
 	}
 
 	private function find_item_by_id($items, $id) {
@@ -1335,16 +1371,69 @@ class TTTW_Plugin {
 		return array();
 	}
 
-	private function get_runtime_proxy_script($widget) {
-		return $this->get_cached_remote_body($this->build_remote_script_url($widget, 'widget.js'), self::SCRIPT_TTL, 'javascript');
+	private function get_saved_widget_payload($widget, $container_id) {
+		$data = $this->get_widget_data($widget);
+
+		if (is_wp_error($data)) {
+			return array(
+				'containerId' => $container_id,
+				'language'    => $widget['language'],
+				'config'      => $this->get_init_config_from_settings($this->get_widget_settings($widget)),
+				'labels'      => $this->get_widget_runtime_labels(),
+				'error'       => $data->get_error_message(),
+			);
+		}
+
+		return array(
+			'containerId' => $container_id,
+			'language'    => $widget['language'],
+			'config'      => $this->get_init_config_from_settings($this->get_widget_settings($widget)),
+			'labels'      => $this->get_widget_runtime_labels(),
+			'data'        => $data,
+		);
 	}
 
-	private function build_remote_script_url($widget, $script) {
+	private function get_preview_widget_payload($preview) {
+		$data = $this->get_preview_widget_data($preview);
+
+		if (is_wp_error($data)) {
+			return $data;
+		}
+
+		return array(
+			'language' => $preview['language'],
+			'config' => $this->get_init_config_from_settings($preview['settings']),
+			'labels' => $this->get_widget_runtime_labels(),
+			'data'   => $data,
+		);
+	}
+
+	private function get_widget_data($widget) {
+		$data = $this->get_cached_remote_json($this->build_widget_data_url($widget), self::DATA_TTL, 'tttw');
+
+		if (is_wp_error($data)) {
+			return $data;
+		}
+
+		return $this->normalize_widget_data($data);
+	}
+
+	private function get_preview_widget_data($preview) {
+		$data = $this->get_cached_remote_json($this->build_preview_data_url($preview), self::DATA_TTL, 'tttw');
+
+		if (is_wp_error($data)) {
+			return $data;
+		}
+
+		return $this->normalize_widget_data($data);
+	}
+
+	private function build_widget_data_url($widget) {
 		$url = trailingslashit(self::API_BASE) .
 			rawurlencode($widget['language']) . '/' .
 			rawurlencode($widget['country']['slug']) . '/' .
 			rawurlencode($widget['region']['slug']) . '/' .
-			rawurlencode($widget['location']['slug']) . '/' . $script;
+			rawurlencode($widget['location']['slug']) . '/data.json';
 
 		return $url;
 	}
@@ -1378,14 +1467,80 @@ class TTTW_Plugin {
 		);
 	}
 
-	private function build_preview_script_url($preview, $script) {
+	private function build_preview_data_url($preview) {
 		$url = trailingslashit(self::API_BASE) .
 			rawurlencode($preview['language']) . '/' .
 			rawurlencode($preview['country_slug']) . '/' .
 			rawurlencode($preview['region_slug']) . '/' .
-			rawurlencode($preview['location_slug']) . '/' . $script;
+			rawurlencode($preview['location_slug']) . '/data.json';
 
 		return $url;
+	}
+
+	private function normalize_widget_data($data) {
+		if (! is_array($data) || empty($data['id']) || empty($data['location']) || empty($data['data']) || ! is_array($data['data'])) {
+			return new WP_Error('tttw_invalid_widget_data', __('Tides Today returned incomplete widget data.', 'tides-today-tides-and-weather'));
+		}
+
+		$normalized_days = array();
+
+		foreach ($data['data'] as $day) {
+			if (! is_array($day) || empty($day['date']) || empty($day['tides']) || ! is_array($day['tides'])) {
+				continue;
+			}
+
+			$timestamp = strtotime($day['date']);
+			$normalized_tides = array();
+
+			foreach ($day['tides'] as $tide) {
+				if (! is_array($tide) || empty($tide['time']) || empty($tide['type'])) {
+					continue;
+				}
+
+				$normalized_tides[] = array(
+					'time'    => sanitize_text_field($tide['time']),
+					'type'    => sanitize_key($tide['type']),
+					'heightM' => isset($tide['heightM']) ? (float) $tide['heightM'] : 0,
+					'heightF' => isset($tide['heightF']) ? (float) $tide['heightF'] : 0,
+				);
+			}
+
+			if (empty($normalized_tides)) {
+				continue;
+			}
+
+			$normalized_day = array(
+				'date'     => sanitize_text_field($day['date']),
+				'dateTime' => false !== $timestamp ? gmdate('Y-m-d', $timestamp) : sanitize_text_field($day['date']),
+				'tides'    => $normalized_tides,
+			);
+
+			if (! empty($day['weather']) && is_array($day['weather'])) {
+				$normalized_day['weather'] = array(
+					'description' => ! empty($day['weather']['description']) ? sanitize_text_field($day['weather']['description']) : '',
+					'icon'        => ! empty($day['weather']['icon']) ? esc_url_raw($day['weather']['icon']) : '',
+					'highF'       => isset($day['weather']['highF']) ? (float) $day['weather']['highF'] : 0,
+					'lowF'        => isset($day['weather']['lowF']) ? (float) $day['weather']['lowF'] : 0,
+					'highC'       => isset($day['weather']['highC']) ? (float) $day['weather']['highC'] : 0,
+					'lowC'        => isset($day['weather']['lowC']) ? (float) $day['weather']['lowC'] : 0,
+				);
+			}
+
+			$normalized_days[] = $normalized_day;
+		}
+
+		if (empty($normalized_days)) {
+			return new WP_Error('tttw_invalid_widget_data', __('Tides Today returned incomplete widget data.', 'tides-today-tides-and-weather'));
+		}
+
+		return array(
+			'id'          => absint($data['id']),
+			'location'    => sanitize_text_field($data['location']),
+			'locationUrl' => ! empty($data['locationUrl']) ? esc_url_raw($data['locationUrl']) : '',
+			'termsUrl'    => ! empty($data['termsUrl']) ? esc_url_raw($data['termsUrl']) : '',
+			'map'         => ! empty($data['map']) ? esc_url_raw($data['map']) : '',
+			'days'        => $normalized_days,
+		);
 	}
 
 	private function get_init_query_args_from_settings($settings) {
@@ -1412,6 +1567,27 @@ class TTTW_Plugin {
 		);
 	}
 
+	private function get_widget_runtime_labels() {
+		return array(
+			/* translators: %s: tide location name. */
+			'title'          => __('Tide times for %s', 'tides-today-tides-and-weather'),
+			'type'           => __('Type', 'tides-today-tides-and-weather'),
+			'time'           => __('Time', 'tides-today-tides-and-weather'),
+			'height'         => __('Height', 'tides-today-tides-and-weather'),
+			'high'           => __('High', 'tides-today-tides-and-weather'),
+			'low'            => __('Low', 'tides-today-tides-and-weather'),
+			/* translators: 1: high temperature, 2: low temperature. */
+			'temperature'    => __('%1$s high %2$s low', 'tides-today-tides-and-weather'),
+			/* translators: %s: linked tide location name. */
+			'leader'         => __('See 7 days tide times and weather for %s', 'tides-today-tides-and-weather'),
+			'disclaimer'     => __('Tide and weather data is predicted from scientific models or third party data. No guarantees are made regarding the accuracy, completeness, or suitability of data on this website. You are responsible for your own safety at sea.', 'tides-today-tides-and-weather'),
+			/* translators: 1: copyright year, 2: linked service name, 3: linked terms and conditions text. */
+			'copyright'      => __('Copyright %1$s %2$s. By using this data, you are agreeing to the %3$s.', 'tides-today-tides-and-weather'),
+			'terms'          => __('Terms and Conditions', 'tides-today-tides-and-weather'),
+			'error'          => __('Tides Today widget data could not be loaded.', 'tides-today-tides-and-weather'),
+		);
+	}
+
 	private function sanitize_language($language) {
 		return ('fr' === $language) ? 'fr' : 'en';
 	}
@@ -1433,15 +1609,25 @@ class TTTW_Plugin {
 	}
 
 	private function enqueue_saved_widget_assets($widget) {
-		$widget_handle = 'tttw-widget-' . $widget['id'];
-		$payload       = $this->get_saved_widget_script_payload($widget);
+		$settings = $this->get_widget_settings($widget);
 
-		if (isset($this->frontend_script_queue[ $widget_handle ])) {
+		if ($settings['include_styles'] && ! $this->frontend_style_queued) {
+			wp_enqueue_style(
+				'tttw-widget',
+				TTTW_PLUGIN_URL . 'assets/css/widget.css',
+				array(),
+				$this->get_asset_version('assets/css/widget.css')
+			);
+
+			$this->frontend_style_queued = true;
+		}
+
+		if ($this->frontend_script_queued) {
 			return;
 		}
 
 		wp_register_script(
-			$widget_handle,
+			'tttw-runtime',
 			TTTW_PLUGIN_URL . 'assets/js/runtime.js',
 			array(),
 			$this->get_asset_version('assets/js/runtime.js'),
@@ -1449,72 +1635,20 @@ class TTTW_Plugin {
 		);
 
 		wp_enqueue_script(
-			$widget_handle,
+			'tttw-runtime',
 			TTTW_PLUGIN_URL . 'assets/js/runtime.js',
 			array(),
-			$this->get_widget_asset_version($widget),
+			$this->get_asset_version('assets/js/runtime.js'),
 			true
 		);
 
-		wp_add_inline_script($widget_handle, $payload['runtime'], 'before');
-		wp_add_inline_script($widget_handle, $payload['init']);
-
-		$this->frontend_script_queue[ $widget_handle ] = true;
-	}
-
-	private function get_widget_asset_version($widget) {
-		return substr(md5($widget['id'] . $widget['updated_at']), 0, 10);
-	}
-
-	private function build_console_error_script($message) {
-		return 'console.error(' . wp_json_encode($message) . ');';
-	}
-
-	private function get_saved_widget_script_payload($widget) {
-		$runtime = $this->get_runtime_proxy_script($widget);
-		$init    = $this->build_widget_init_script($this->get_container_id($widget), $this->get_widget_settings($widget));
-
-		return $this->normalize_script_payload($runtime, $init);
-	}
-
-	private function get_preview_script_payload($preview) {
-		$runtime = $this->get_cached_remote_body($this->build_preview_script_url($preview, 'widget.js'), self::SCRIPT_TTL, 'javascript');
-
-		return $this->normalize_script_payload($runtime, '');
-	}
-
-	private function normalize_script_payload($runtime, $init) {
-		if (is_wp_error($runtime)) {
-			$runtime = $this->build_console_error_script($runtime->get_error_message());
-		}
-
-		if (is_wp_error($init)) {
-			$init = $this->build_console_error_script($init->get_error_message());
-		}
-
-		return array(
-			'runtime' => is_string($runtime) ? $runtime : '',
-			'init'    => is_string($init) ? $init : '',
+		wp_add_inline_script(
+			'tttw-runtime',
+			'window.TTTWRuntimeData = ' . wp_json_encode(array('labels' => $this->get_widget_runtime_labels())) . ';',
+			'before'
 		);
-	}
 
-	private function build_widget_init_script($container_id, $settings) {
-		return '(function(){' .
-			'var initialized=false;' .
-			'var containerId=' . wp_json_encode((string) $container_id) . ';' .
-			'var config=' . wp_json_encode($this->get_init_config_from_settings($settings)) . ';' .
-			'var init=function(){' .
-				'if(initialized||typeof createTideInstance!=="function"){return;}' .
-				'initialized=true;' .
-				'createTideInstance(containerId,config);' .
-			'};' .
-			'if(document.readyState==="loading"){' .
-				'document.addEventListener("DOMContentLoaded",init,{once:true});' .
-				'window.addEventListener("load",init,{once:true});' .
-			'}else{' .
-				'init();' .
-			'}' .
-		'}());';
+		$this->frontend_script_queued = true;
 	}
 
 	private function redirect_to_admin($query_args) {

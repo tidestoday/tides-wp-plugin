@@ -4,7 +4,7 @@ Tags: tides, weather, shortcode, gutenberg, widget
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.0
-Stable tag: 2.0.4
+Stable tag: 2.1.0
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,8 +22,8 @@ Features include:
 * Shortcode output for every saved widget
 * Classic sidebar widget support
 * Gutenberg block support with a dropdown of saved widgets
-* Proxied `widget.js` and `widget-init.js` assets enqueued from the site's own domain
-* WordPress cache-backed API and proxy fetching to reduce repeated remote requests
+* Plugin-bundled JavaScript and base CSS for front-end widget rendering
+* WordPress cache-backed API fetching to reduce repeated remote requests
 * Styling support via WordPress' built-in Additional CSS tools and theme styles
 
 == Installation ==
@@ -51,7 +51,7 @@ Save a widget in `Tides Today`, then either:
 
 = Are API calls cached? =
 
-Yes. Countries, regions, locations, and proxied widget script fetches are cached with WordPress cache APIs.
+Yes. Countries, regions, locations, and widget data requests are cached with WordPress cache APIs.
 
 = How do I style a widget? =
 
@@ -65,21 +65,24 @@ The plugin is built for WordPress 5.0+ and PHP 7.0+.
 
 == External services ==
 
-This plugin connects to the Tides Today widget API at `api.tidestoday.io` to load the list of available countries, regions, and locations, and to fetch the widget JavaScript required to display tide and weather data.
+This plugin connects to the Tides Today widget API at `api.tidestoday.io` to load the list of available countries, regions, and locations, and to fetch the tide and weather data needed by saved widgets.
 
-When an administrator uses the widget builder, the plugin sends the selected widget language and selected location identifiers or slugs to the Tides Today service to retrieve catalog data and preview assets.
+When an administrator uses the widget builder, the plugin sends the selected widget language and selected location identifiers or slugs to the Tides Today service to retrieve catalog data and preview data.
 
-When a saved widget is displayed on the public site, the plugin requests the Tides Today widget JavaScript for the saved language, country, region, location, and display options so the widget can render current tide and weather information.
+When a saved widget is displayed on the public site, the plugin requests `data.json` from the Tides Today API for the saved language, country, region, and location so the plugin-bundled JavaScript can render current tide and weather information.
 
-Those requests are made from your WordPress site server to the Tides Today service. The plugin identifies itself with its name and version in the request user agent. Site visitors do not send data directly from their browsers to `api.tidestoday.io`; the plugin proxies and caches the service responses through WordPress.
+Those API requests are made from your WordPress site server to the Tides Today service. Site visitors do not receive remotely hosted executable JavaScript from Tides Today; widget rendering JavaScript and base CSS are included in this plugin. The plugin caches service responses through WordPress.
 
-Map and weather assets are also loaded from `https://tides-assets.lon1.digitaloceanspaces.com` when the widget renders. This is required because it is not practical to bundle and maintain map and weather image assets for more than 8,000 supported locations inside the plugin package.
+Map and weather image assets referenced by the widget data are loaded from the Tides Today CDN at `https://cdn.tidestoday.media` when the widget renders. These are image assets only, not executable code. This is required because it is not practical to bundle and maintain map and weather image assets for more than 8,000 supported locations inside the plugin package.
 
 Terms of Service: https://tides.today/en/terms-of-service
 
 Privacy Policy: https://tides.today/en/privacy-policy
 
 == Changelog ==
+
+= 2.1.0 =
+Replaced remotely generated widget JavaScript with plugin-bundled rendering code that uses server-fetched Tides Today `data.json` responses.
 
 = 2.0.4 =
 Fixes to uninstall script.

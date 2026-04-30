@@ -1,0 +1,149 @@
+.tides-widget__container {
+	--tttw-border-color: color-mix(in srgb, currentColor 18%, transparent);
+	--tttw-muted-color: color-mix(in srgb, currentColor 62%, transparent);
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 100%;
+	padding: clamp(1rem, 2vw, 1.5rem);
+	border: 1px solid #ddd;
+	border-color: var(--tttw-border-color, #ddd);
+	border-radius: .5rem;
+	margin-block: 0 1.5rem;
+	color: inherit;
+	font: inherit;
+}
+
+.tides-widget__container *,
+.tides-widget__container *::before,
+.tides-widget__container *::after {
+	box-sizing: border-box;
+}
+
+.tides-widget__container h2 {
+	margin-block: 0 1.25rem;
+}
+
+.tides-widget__container a {
+	color: inherit;
+	text-decoration: underline;
+	text-underline-offset: .15em;
+}
+
+.tides-widget__container .tides-widget__map {
+	border-radius: .375rem;
+	overflow: hidden;
+	height: 0;
+	padding-top: 56.25%;
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	margin-block-end: 1.25rem;
+}
+
+.tides-widget__container .tides-widget__weather {
+	min-height: 56px;
+	margin-block-end: 1.25rem;
+	display: flex;
+	align-items: center;
+	gap: .75rem;
+}
+
+.tides-widget__container .tides-widget__weather-icon {
+	width: 48px;
+	height: 48px;
+	flex: 0 0 48px;
+	object-fit: contain;
+}
+
+.tides-widget__container .tides-widget__weather-content {
+	min-width: 0;
+}
+
+.tides-widget__container .tides-widget__weather h3,
+.tides-widget__container .tides-widget__weather p {
+	margin-block: 0;
+}
+
+.tides-widget__container .tides-widget__weather .title {
+	font-size: 1.1em;
+	line-height: 1.25;
+}
+
+.tides-widget__container .tides-widget__weather .min-max {
+	color: #666;
+	color: var(--tttw-muted-color, #666);
+}
+
+.tides-widget__container .tides-widget__caption {
+	text-align: left;
+	color: #666;
+	color: var(--tttw-muted-color, #666);
+}
+
+.tides-widget__container .tides-widget__caption {
+	margin-block: 0 .5rem;
+}
+
+.tides-widget__container .tides-widget__caption time {
+	font-size: .875em;
+}
+
+.tides-widget__container .tides-widget__tables {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+	gap: 2rem 1.5rem;
+	margin-block-end: 2em;
+}
+
+.tides-widget__container .tides-widget__table-container {
+	min-width: 0;
+}
+
+.tides-widget__container .tides-widget__table-container table {
+	display: table;
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	font: inherit;
+	font-size: .95em;
+}
+
+.tides-widget__container .tides-widget__table-container table th {
+	text-align: left;
+	font-weight: 600;
+}
+
+.tides-widget__container .tides-widget__table-container table th,
+.tides-widget__container .tides-widget__table-container table td {
+	border-block-end: 1px solid #ddd;
+	border-block-end-color: var(--tttw-border-color, #ddd);
+	padding: .55em .4em;
+	vertical-align: top;
+}
+
+.tides-widget__container .tides-widget__table-container table th:first-child,
+.tides-widget__container .tides-widget__table-container table td:first-child {
+	padding-inline-start: 0;
+}
+
+.tides-widget__container .tides-widget__table-container table th:last-child,
+.tides-widget__container .tides-widget__table-container table td:last-child {
+	padding-inline-end: 0;
+}
+
+.tides-widget__container .tides-widget__copyright {
+	margin-block-start: 1rem;
+	color: #666;
+	color: var(--tttw-muted-color, #666);
+	font-size: .7em;
+}
+
+.tides-widget__container .tides-widget__copyright p {
+	margin-block: .35rem 0;
+}
+
+.tides-widget__container--error {
+	color: #721c24;
+	background: #f8d7da;
+	border-color: #f5c6cb;
+}
