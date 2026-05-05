@@ -22,6 +22,18 @@ if (! function_exists('trailingslashit')) {
 	}
 }
 
+if (! function_exists('untrailingslashit')) {
+	function untrailingslashit($value) {
+		return rtrim($value, '/');
+	}
+}
+
+if (! function_exists('wp_parse_url')) {
+	function wp_parse_url($url, $component = -1) {
+		return parse_url($url, $component);
+	}
+}
+
 if (! function_exists('sanitize_key')) {
 	function sanitize_key($value) {
 		return strtolower(preg_replace('/[^a-z0-9_\-]/', '', (string) $value));
@@ -206,9 +218,28 @@ $tests['build_widget_data_url targets the data endpoint'] = function () use ($pl
 	);
 
 	tttw_assert_same(
-		'https://api.tidestoday.io/widgets-api/js-v1/en/wales/conwy/llandudno/data.json',
+		'https://api.tidestoday.io/widgets-api/wp-v1/en/wales/conwy/llandudno/data.json',
 		$url,
 		'Widget data URLs should point to data.json, not remote JavaScript.'
+	);
+};
+
+$tests['build_request_signature signs method path and timestamp'] = function () use ($plugin) {
+	$signature = tttw_call_private_method(
+		$plugin,
+		'build_request_signature',
+		array(
+			'GET',
+			'https://api.tidestoday.io/widgets-api/wp-v1/en/wales/conwy/llandudno/data.json',
+			'1772300000',
+			'secret-key'
+		)
+	);
+
+	tttw_assert_same(
+		hash_hmac('sha256', "GET\n/widgets-api/wp-v1/en/wales/conwy/llandudno/data.json\n1772300000", 'secret-key'),
+		$signature,
+		'Signatures should be based on the HTTP method, URL path, timestamp, and installation secret.'
 	);
 };
 
