@@ -5,6 +5,7 @@ if (! defined('WP_UNINSTALL_PLUGIN')) {
 
 function tttw_uninstall() {
 	delete_option( 'tttw_widgets' );
+	delete_option( 'tttw_installation' );
 
 	$cache_keys = get_option( 'tttw_cache_keys', array() );
 

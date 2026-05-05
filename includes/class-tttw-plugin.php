@@ -6,6 +6,7 @@ if (! defined('ABSPATH')) {
 
 class TTTW_Plugin {
 	const OPTION_KEY     = 'tttw_widgets';
+	const INSTALLATION_OPTION_KEY = 'tttw_installation';
 	const CACHE_KEYS_OPTION = 'tttw_cache_keys';
 	const CACHE_GROUP    = 'tttw';
 	const CACHE_PREFIX   = 'tttw_cache_';
@@ -13,7 +14,7 @@ class TTTW_Plugin {
 	const ADMIN_ADD_SLUG = 'tttw-add-widget';
 	const CATALOG_TTL    = 86400;
 	const DATA_TTL       = 300;
-	const API_BASE       = 'https://api.tidestoday.io/widgets-api/js-v1';
+	const API_BASE       = 'https://api.tidestoday.io/widgets-api/wp-v1';
 
 	private static $instance = null;
 
@@ -1156,7 +1157,7 @@ class TTTW_Plugin {
 	}
 
 	private function get_countries($language) {
-		$url  = trailingslashit(self::API_BASE) . $language;
+		$url  = trailingslashit($this->get_api_base()) . $language;
 		$data = $this->get_cached_remote_json($url, self::CATALOG_TTL);
 
 		if (is_wp_error($data)) {
@@ -1173,7 +1174,7 @@ class TTTW_Plugin {
 			return array();
 		}
 
-		$url  = trailingslashit(self::API_BASE) . $language . '/' . absint($country_id);
+		$url  = trailingslashit($this->get_api_base()) . $language . '/' . absint($country_id);
 		$data = $this->get_cached_remote_json($url, self::CATALOG_TTL);
 
 		if (is_wp_error($data)) {
@@ -1188,7 +1189,7 @@ class TTTW_Plugin {
 			return array();
 		}
 
-		$url  = trailingslashit(self::API_BASE) . $language . '/' . absint($country_id) . '/' . absint($region_id);
+		$url  = trailingslashit($this->get_api_base()) . $language . '/' . absint($country_id) . '/' . absint($region_id);
 		$data = $this->get_cached_remote_json($url, self::CATALOG_TTL);
 
 		if (is_wp_error($data)) {
@@ -1293,13 +1294,21 @@ class TTTW_Plugin {
 			return $cached;
 		}
 
+		$request_args = $this->get_signed_request_args($url, $user_agent);
+
+		if (is_wp_error($request_args)) {
+			return $request_args;
+		}
+
 		$response = wp_safe_remote_get(
 			$url,
-			array(
-				'timeout'            => 15,
-				'redirection'        => 3,
-				'reject_unsafe_urls' => true,
-				'user-agent'         => '' !== $user_agent ? $user_agent : 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION,
+			array_merge(
+				$request_args,
+				array(
+					'timeout'            => 15,
+					'redirection'        => 3,
+					'reject_unsafe_urls' => true,
+				)
 			)
 		);
 
@@ -1328,6 +1337,114 @@ class TTTW_Plugin {
 
 	private function get_cache_key($url) {
 		return self::CACHE_PREFIX . md5($url);
+	}
+
+	private function get_api_base() {
+		$base_url = defined('TTTW_API_BASE') ? TTTW_API_BASE : self::API_BASE;
+
+		if (function_exists('apply_filters')) {
+			$base_url = apply_filters('tttw_api_base', $base_url);
+		}
+
+		return untrailingslashit($base_url);
+	}
+
+	private function get_signed_request_args($url, $user_agent = '') {
+		$credentials = $this->get_installation_credentials();
+
+		if (is_wp_error($credentials)) {
+			return $credentials;
+		}
+
+		$timestamp = (string) time();
+		$signature = $this->build_request_signature('GET', $url, $timestamp, $credentials['secret']);
+
+		return array(
+			'user-agent' => '' !== $user_agent ? $user_agent : 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION,
+			'headers'    => array(
+				'X-TTTW-Installation-ID' => $credentials['installation_id'],
+				'X-TTTW-Timestamp'       => $timestamp,
+				'X-TTTW-Signature'       => $signature,
+			),
+		);
+	}
+
+	private function get_installation_credentials() {
+		$credentials = get_option(self::INSTALLATION_OPTION_KEY, array());
+
+		if (
+			is_array($credentials) &&
+			! empty($credentials['installation_id']) &&
+			! empty($credentials['secret'])
+		) {
+			return array(
+				'installation_id' => sanitize_text_field($credentials['installation_id']),
+				'secret'          => sanitize_text_field($credentials['secret']),
+			);
+		}
+
+		return $this->register_installation();
+	}
+
+	private function register_installation() {
+		$response = wp_safe_remote_post(
+			trailingslashit($this->get_api_base()) . 'register',
+			array(
+				'timeout'            => 15,
+				'redirection'        => 3,
+				'reject_unsafe_urls' => true,
+				'user-agent'         => 'Tides Today Tides and Weather/' . TTTW_PLUGIN_VERSION,
+				'headers'            => array(
+					'Content-Type' => 'application/json',
+				),
+				'body'               => wp_json_encode(
+					array(
+						'siteUrl'       => $this->get_site_url_for_registration(),
+						'pluginVersion' => TTTW_PLUGIN_VERSION,
+					)
+				),
+			)
+		);
+
+		if (is_wp_error($response)) {
+			return new WP_Error('tttw_installation_registration_failed', __('The Tides Today service could not register this WordPress installation.', 'tides-today-tides-and-weather'));
+		}
+
+		$response_code = wp_remote_retrieve_response_code($response);
+		$body          = wp_remote_retrieve_body($response);
+
+		if ($response_code < 200 || $response_code >= 300 || '' === $body) {
+			return new WP_Error('tttw_installation_registration_http_error', __('Tides Today returned an unexpected installation registration response.', 'tides-today-tides-and-weather'));
+		}
+
+		$data = json_decode($body, true);
+
+		if (! is_array($data) || empty($data['installationId']) || empty($data['secret'])) {
+			return new WP_Error('tttw_installation_registration_invalid_json', __('Tides Today returned invalid installation registration data.', 'tides-today-tides-and-weather'));
+		}
+
+		$credentials = array(
+			'installation_id' => sanitize_text_field($data['installationId']),
+			'secret'          => sanitize_text_field($data['secret']),
+		);
+
+		update_option(self::INSTALLATION_OPTION_KEY, $credentials, false);
+
+		return $credentials;
+	}
+
+	private function get_site_url_for_registration() {
+		if (function_exists('home_url')) {
+			return esc_url_raw(home_url('/'));
+		}
+
+		return '';
+	}
+
+	private function build_request_signature($method, $url, $timestamp, $secret) {
+		$path = wp_parse_url($url, PHP_URL_PATH);
+
+		return hash_hmac('sha256', strtoupper($method) . "\n" . $path . "\n" . $timestamp, $secret);
 	}
 
 	private function get_cached_value($cache_key) {
@@ -1429,7 +1546,7 @@ class TTTW_Plugin {
 	}
 
 	private function build_widget_data_url($widget) {
-		$url = trailingslashit(self::API_BASE) .
+		$url = trailingslashit($this->get_api_base()) .
 			rawurlencode($widget['language']) . '/' .
 			rawurlencode($widget['country']['slug']) . '/' .
 			rawurlencode($widget['region']['slug']) . '/' .
@@ -1468,7 +1585,7 @@ class TTTW_Plugin {
 	}
 
 	private function build_preview_data_url($preview) {
-		$url = trailingslashit(self::API_BASE) .
+		$url = trailingslashit($this->get_api_base()) .
 			rawurlencode($preview['language']) . '/' .
 			rawurlencode($preview['country_slug']) . '/' .
 			rawurlencode($preview['region_slug']) . '/' .

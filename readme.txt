@@ -4,7 +4,7 @@ Tags: tides, weather, shortcode, gutenberg, widget
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.0
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -67,6 +67,8 @@ The plugin is built for WordPress 5.0+ and PHP 7.0+.
 
 This plugin connects to the Tides Today widget API at `api.tidestoday.io` to load the list of available countries, regions, and locations, and to fetch the tide and weather data needed by saved widgets.
 
+On first use, the plugin registers this WordPress installation with the Tides Today widget API. The API returns an installation identifier and secret, which are stored in the WordPress options table and used to sign future catalog and widget data requests. This helps protect the public widget API from abuse while allowing legitimate high-traffic sites to use cached server-side requests.
+
 When an administrator uses the widget builder, the plugin sends the selected widget language and selected location identifiers or slugs to the Tides Today service to retrieve catalog data and preview data.
 
 When a saved widget is displayed on the public site, the plugin requests `data.json` from the Tides Today API for the saved language, country, region, and location so the plugin-bundled JavaScript can render current tide and weather information.
@@ -80,6 +82,9 @@ Terms of Service: https://tides.today/en/terms-of-service
 Privacy Policy: https://tides.today/en/privacy-policy
 
 == Changelog ==
+
+= 2.1.1 =
+Moved WordPress data requests to the signed `wp-v1` widget API and added per-installation API registration credentials.
 
 = 2.1.0 =
 Replaced remotely generated widget JavaScript with plugin-bundled rendering code that uses server-fetched Tides Today `data.json` responses.
