@@ -19,3 +19,7 @@ npm run test
 ```
 
 The WordPress.org plugin readme remains in [readme.txt](./readme.txt).
+
+## Releasing
+
+Increment the plugin patch version before committing and when the pull request is approve, the plugin is automatically released.
