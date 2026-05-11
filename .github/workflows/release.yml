@@ -15,6 +15,7 @@ jobs:
     name: Release
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
     runs-on: ubuntu-latest
+    environment: prod
 
     steps:
       - name: Check out repository
@@ -107,6 +108,113 @@ jobs:
             cd "$staging_dir"
             zip -qr "$GITHUB_WORKSPACE/$plugin_slug.zip" "$plugin_slug"
           )
+
+      - name: Publish to WordPress.org SVN
+        if: ${{ steps.version.outputs.should_release == 'true' }}
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          plugin_slug="tides-today-tides-and-weather"
+          svn_url="https://plugins.svn.wordpress.org/$plugin_slug"
+          release_dir="$(mktemp -d)"
+          svn_dir="$(mktemp -d)"
+
+          cleanup() {
+            rm -rf "$release_dir" "$svn_dir"
+          }
+
+          trap cleanup EXIT
+
+          if [ -z "${SVN_USERNAME:-}" ] || [ -z "${SVN_PASSWORD:-}" ]; then
+            printf 'SVN_USERNAME and SVN_PASSWORD are required to publish to WordPress.org SVN.\n' >&2
+            exit 1
+          fi
+
+          rsync -a \
+            --delete \
+            --exclude-from=".distignore" \
+            --exclude='.git/' \
+            --exclude="$plugin_slug.zip" \
+            ./ \
+            "$release_dir/"
+
+          forbidden_paths=(
+            ".distignore"
+            ".github"
+            ".git"
+            ".gitignore"
+            "README.md"
+            "docker-compose.yml"
+            "docker"
+            "node_modules"
+            "tests"
+            "package.json"
+            "package-lock.json"
+            "composer.json"
+            "plugin-profile"
+            ".opencode"
+            "AGENTS.md"
+            "$plugin_slug.zip"
+          )
+
+          for forbidden_path in "${forbidden_paths[@]}"; do
+            if [ -e "$release_dir/$forbidden_path" ]; then
+              printf 'Release payload contains excluded path: %s\n' "$forbidden_path" >&2
+              exit 1
+            fi
+          done
+
+          svn checkout --depth immediates "$svn_url" "$svn_dir" \
+            --username "$SVN_USERNAME" \
+            --password "$SVN_PASSWORD" \
+            --non-interactive \
+            --trust-server-cert
+
+          svn update --set-depth infinity "$svn_dir/trunk" "$svn_dir/assets" "$svn_dir/tags" \
+            --username "$SVN_USERNAME" \
+            --password "$SVN_PASSWORD" \
+            --non-interactive \
+            --trust-server-cert
+
+          if svn info "$svn_dir/tags/$VERSION" >/dev/null 2>&1; then
+            printf 'WordPress.org SVN tag %s already exists; skipping SVN publish.\n' "$VERSION"
+            exit 0
+          fi
+
+          find "$svn_dir/trunk" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+          rsync -a --delete "$release_dir/" "$svn_dir/trunk/"
+
+          mkdir -p "$svn_dir/assets"
+          cp "plugin-profile/banner-772-250.png" "$svn_dir/assets/banner-772x250.png"
+          cp "plugin-profile/banner-1544-500.png" "$svn_dir/assets/banner-1544x500.png"
+          cp "plugin-profile/icon-128-128.png" "$svn_dir/assets/icon-128x128.png"
+          cp "plugin-profile/icon-256-256.png" "$svn_dir/assets/icon-256x256.png"
+          cp "plugin-profile/screenshot-1.png" "$svn_dir/assets/screenshot-1.png"
+          cp "plugin-profile/screenshot-2.png" "$svn_dir/assets/screenshot-2.png"
+          cp "plugin-profile/screenshot-3.png" "$svn_dir/assets/screenshot-3.png"
+
+          svn add --force "$svn_dir/trunk" "$svn_dir/assets"
+
+          while IFS= read -r missing_path; do
+            [ -n "$missing_path" ] || continue
+            svn delete "$missing_path"
+          done < <(svn status "$svn_dir/trunk" "$svn_dir/assets" | awk '/^!/ { sub(/^! +/, ""); print }')
+
+          find "$svn_dir/assets" -type f -name '*.png' -exec svn propset svn:mime-type image/png {} +
+          svn copy "$svn_dir/trunk" "$svn_dir/tags/$VERSION"
+
+          svn status "$svn_dir"
+
+          svn commit "$svn_dir" \
+            --message "Release $VERSION" \
+            --username "$SVN_USERNAME" \
+            --password "$SVN_PASSWORD" \
+            --non-interactive \
+            --trust-server-cert
 
       - name: Create GitHub release
         if: ${{ steps.version.outputs.should_release == 'true' }}

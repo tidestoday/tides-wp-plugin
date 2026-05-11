@@ -9,14 +9,6 @@ tests/
 package.json
 package-lock.json
 composer.json
-assets/banner-1544x500-fr_CA.jpg
-assets/banner-1544x500-fr_FR.jpg
-assets/banner-1544x500.jpg
-assets/banner-772x250-fr_CA.jpg
-assets/banner-772x250-fr_FR.jpg
-assets/banner-772x250.jpg
-assets/icon.svg
-assets/screenshot-1.png
-assets/screenshot-2.png
+plugin-profile/
 .opencode
 AGENTS.md
