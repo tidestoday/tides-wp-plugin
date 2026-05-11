@@ -109,6 +109,14 @@ jobs:
             zip -qr "$GITHUB_WORKSPACE/$plugin_slug.zip" "$plugin_slug"
           )
 
+      - name: Install Subversion
+        if: ${{ steps.version.outputs.should_release == 'true' }}
+        run: |
+          set -euo pipefail
+
+          sudo apt-get update
+          sudo apt-get install -y subversion
+
       - name: Publish to WordPress.org SVN
         if: ${{ steps.version.outputs.should_release == 'true' }}
         env:
