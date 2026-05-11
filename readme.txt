@@ -4,7 +4,7 @@ Tags: tides, weather, shortcode, gutenberg, widget
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.0
-Stable tag: 2.1.1
+Stable tag: 2.1.2
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,9 @@ Terms of Service: https://tides.today/en/terms-of-service
 Privacy Policy: https://tides.today/en/privacy-policy
 
 == Changelog ==
+
+= 2.1.2 =
+Added WordPress.org release assets and SVN publishing automation.
 
 = 2.1.1 =
 Moved WordPress data requests to the signed `wp-v1` widget API and added per-installation API registration credentials.
