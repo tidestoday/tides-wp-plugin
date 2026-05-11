@@ -12,17 +12,17 @@ Build reusable Tides Today tide and weather widgets and place them with a shortc
 
 == Description ==
 
-Tides Today Tides and Weather lets site owners create saved widget definitions in the WordPress admin area and reuse them anywhere on the site.
+Tides Today Tides and Weather allows you to add tide times and weather information to your site for over 8,000 locations worldwide.
 
 Features include:
 
-* Saved widget builder in the WordPress admin sidebar
+* Add tide times and weather to your site for over 8,000 locations world-wide
+* Preview your widget from the WordPress admin
 * Language-aware country, region, and location selection from the Tides Today widget API
-* Priority country ordering for English and French pickers
+* Customise your Tide Times and Weather widget in English or French
 * Shortcode output for every saved widget
 * Classic sidebar widget support
 * Gutenberg block support with a dropdown of saved widgets
-* Plugin-bundled JavaScript and base CSS for front-end widget rendering
 * WordPress cache-backed API fetching to reduce repeated remote requests
 * Styling support via WordPress' built-in Additional CSS tools and theme styles
 
@@ -38,6 +38,7 @@ Features include:
 
 1. The widget builder in the WordPress admin with live preview and location selection.
 2. A saved Tides Today widget embedded on the front end of a WordPress post.
+3. Add widgets in French to your French language website.
 
 == Frequently Asked Questions ==
 
